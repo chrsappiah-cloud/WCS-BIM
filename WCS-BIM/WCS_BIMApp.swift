@@ -1,8 +1,6 @@
 //
 //  WCS_BIMApp.swift
-//  WCS-BIM
-//
-//  Created by Christopher Appiah-Thompson  on 17/5/2026.
+//  ArchFusion BIM (matches ArchFusionBIMApp starter layout)
 //
 
 import SwiftUI
@@ -10,23 +8,43 @@ import SwiftData
 
 @main
 struct WCS_BIMApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppBootstrapView()
         }
-        .modelContainer(sharedModelContainer)
     }
 }
+
+/// Loads SwiftData after launch so XCTest can attach before container setup runs.
+private struct AppBootstrapView: View {
+    @State private var container: ModelContainer?
+    @State private var loadError: String?
+
+    var body: some View {
+        Group {
+            if let container {
+                AppShellView()
+                    .modelContainer(container)
+            } else if let loadError {
+                ContentUnavailableView(
+                    "Data Store Unavailable",
+                    systemImage: "externaldrive.badge.exclamationmark",
+                    description: Text(loadError)
+                )
+            } else {
+                ProgressView("Loading…")
+            }
+        }
+        .task {
+            guard container == nil, loadError == nil else { return }
+            do {
+                container = try ArchFusionSchema.makeContainerThrowing()
+            } catch {
+                loadError = error.localizedDescription
+            }
+        }
+    }
+}
+
+/// Canonical app type name from the ArchFusion BIM source pack.
+typealias ArchFusionBIMApp = WCS_BIMApp
