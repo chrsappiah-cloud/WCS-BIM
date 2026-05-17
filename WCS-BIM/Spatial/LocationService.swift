@@ -30,10 +30,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     }
 
     func requestPermission() {
+        guard !UITestConfiguration.isEnabled else { return }
         manager.requestWhenInUseAuthorization()
     }
 
     func startUpdates() {
+        guard !UITestConfiguration.isEnabled else { return }
         manager.startUpdatingLocation()
     }
 

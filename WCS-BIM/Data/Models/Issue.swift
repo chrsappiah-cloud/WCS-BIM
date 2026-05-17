@@ -11,6 +11,7 @@ final class Issue {
     var zone: String
     var elementGuid: String
     var createdAt: Date
+    var project: Project?
 
     init(
         title: String,

@@ -1,0 +1,15 @@
+Area,Case,Input,Expected,Suite,WCS_BIM_Test,Status
+Auth,Valid login,Known user credentials,"Session created, home opens",UI/Integration,—,n/a
+Auth,Invalid login,Bad password,"Error shown, no session",Unit/UI,—,n/a
+Auth,Session restore,Existing token,User returns to last state,Integration,—,n/a
+Onboarding,First launch,Fresh install,Intro flow appears once,UI,WCS_BIMUITestsLaunchTests.testLaunch,partial
+Onboarding,Skip onboarding,Skip action,Home loads immediately,UI,Tier1SmokeUITests.testAppShellTabsVisible,implemented
+Core,Primary action success,Valid payload,Action completes and persists,Integration/UI,Tier1SmokeUITests.testCreateProjectCoreAction,implemented
+Core,Primary action failure,Server error,Graceful error and retry path,Unit/Integration,OpenAIResponseContractTests,partial
+Sync,Offline save,No network,Local queue stores data,Unit/Integration,ModelContainerBootstrapTests,implemented
+Sync,Reconnect sync,Network restored,Queued data syncs,Integration,SwiftData disk store (ArchFusion_v11),partial
+Settings,Change preference,Toggle setting,Setting persists after relaunch,Unit/Integration/UI,AppSettingsUpdaterTests + Tier3ScreenUITests.testSettingsScreen,implemented
+Notifications,Permission grant,Allow notifications,Token registered,Manual/UI,—,planned
+Notifications,Permission deny,Deny notifications,Fallback path works,Manual/UI,—,planned
+Performance,Cold launch,App starts from terminated state,Launch within target,Perf,Tier5PerformanceUITests.testLaunchPerformance,implemented
+Performance,Scroll smoothness,Long feed,No visible jank,Perf/UI,AllUIUnitsUITests.testAllUIUnitsEndToEnd,implemented

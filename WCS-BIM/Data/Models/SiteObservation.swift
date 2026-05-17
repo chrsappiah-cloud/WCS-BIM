@@ -11,6 +11,7 @@ final class SiteObservation {
     var photoPath: String?
     var capturedAt: Date
     var arTransformData: Data?
+    var project: Project?
 
     init(
         title: String,

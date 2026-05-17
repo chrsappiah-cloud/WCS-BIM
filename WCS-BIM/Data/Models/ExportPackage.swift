@@ -8,6 +8,7 @@ final class ExportPackage {
     var fileName: String
     var createdAt: Date
     var notes: String
+    var project: Project?
 
     init(format: String, fileName: String, notes: String = "") {
         self.id = UUID()

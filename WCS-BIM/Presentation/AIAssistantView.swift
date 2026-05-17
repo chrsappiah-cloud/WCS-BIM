@@ -42,12 +42,18 @@ struct AIAssistantView: View {
                     text: $prompt,
                     axis: .vertical
                 )
+                .font(WCSFont.body())
                 .textFieldStyle(.roundedBorder)
+                .accessibilityIdentifier("ai.promptField")
+                .accessibilityLabel("AI prompt")
 
-                Button("Generate") {
+                PrimaryButton(
+                    "Generate",
+                    isEnabled: !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !aiService.isLoading
+                ) {
                     Task { await generate() }
                 }
-                .disabled(prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || aiService.isLoading)
+                .accessibilityIdentifier("ai.generateButton")
 
                 if aiService.isLoading { ProgressView() }
 

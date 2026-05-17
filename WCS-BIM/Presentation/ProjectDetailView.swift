@@ -7,6 +7,8 @@ struct ProjectDetailView: View {
     @State private var landmarkTitle = ""
     @State private var landmarkLat = 0.0
     @State private var landmarkLon = 0.0
+    @State private var showInspector = false
+    @State private var inspectorParams: [InspectorParam] = []
 
     var body: some View {
         Form {
@@ -14,6 +16,24 @@ struct ProjectDetailView: View {
                 NavigationLink("Open full workspace") {
                     ProjectWorkspaceView(project: project)
                 }
+                .accessibilityIdentifier("project.openWorkspace")
+
+                SecondaryButton("Edit parameters") {
+                    inspectorParams = [
+                        InspectorParam(key: "Name", value: project.name),
+                        InspectorParam(key: "Notes", value: project.notes),
+                        InspectorParam(
+                            key: "Latitude",
+                            value: String(format: "%.5f", project.siteLatitude)
+                        ),
+                        InspectorParam(
+                            key: "Longitude",
+                            value: String(format: "%.5f", project.siteLongitude)
+                        )
+                    ]
+                    showInspector = true
+                }
+                .accessibilityIdentifier("project.editParameters")
             }
 
             Section("Site") {
@@ -46,5 +66,24 @@ struct ProjectDetailView: View {
             }
         }
         .navigationTitle(project.name)
+        .sheet(isPresented: $showInspector) {
+            InspectorSheet(isPresented: $showInspector, title: "Inspector", params: $inspectorParams) { saved in
+                applyInspector(saved)
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
+    }
+
+    private func applyInspector(_ params: [InspectorParam]) {
+        for param in params {
+            switch param.key {
+            case "Name": project.name = param.value
+            case "Notes": project.notes = param.value
+            case "Latitude": project.siteLatitude = Double(param.value) ?? project.siteLatitude
+            case "Longitude": project.siteLongitude = Double(param.value) ?? project.siteLongitude
+            default: break
+            }
+        }
     }
 }

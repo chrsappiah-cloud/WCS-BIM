@@ -1,0 +1,73 @@
+# Nightly — full UI regression, screens, performance (report-only failures on non-critical tiers).
+name: CI Nightly
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-regression:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve simulator destination
+        id: sim
+        run: |
+          DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
+            | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
+          NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+          OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+          echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' build
+
+      - name: Tier 2 regression UI
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMUITests/Tier2RegressionUITests \
+            test
+
+      - name: Tier 3 screen UI
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMUITests/Tier3ScreenUITests \
+            test
+
+      - name: Upload UI test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-ui-results
+          path: '**/Logs/Test/**/*.xcresult'
+
+  nightly-performance:
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Xcode
+        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+      - name: Resolve simulator destination
+        id: sim
+        run: |
+          DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
+            | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
+          NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+          OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+          echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+      - name: Tier 5 performance
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMUITests/Tier5PerformanceUITests \
+            test

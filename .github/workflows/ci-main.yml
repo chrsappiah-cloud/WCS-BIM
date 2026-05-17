@@ -1,0 +1,64 @@
+# Enforced CI on every push to main — build, unit, smoke UI, design-system UI.
+name: CI Main
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-main-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve simulator destination
+        id: sim
+        run: |
+          DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
+            | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
+          if [ -z "$DEST" ]; then
+            echo "destination=generic/platform=iOS Simulator" >> "$GITHUB_OUTPUT"
+          else
+            NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+            OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+            echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' build
+
+      - name: Unit tests (fast + design tokens)
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMTests/WCS_BIMTests \
+            -only-testing:WCS-BIMTests/AppSettingsUpdaterTests \
+            -only-testing:WCS-BIMTests/OpenAIResponseContractTests \
+            -only-testing:WCS-BIMTests/DesignSystemTokenTests \
+            test
+
+      - name: Tier 1 UI smoke
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -parallel-testing-enabled NO \
+            -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
+            -only-testing:WCS-BIMUITests/DesignSystemUITests \
+            test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-ci-results
+          path: '**/Logs/Test/**/*.xcresult'

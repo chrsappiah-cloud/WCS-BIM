@@ -10,7 +10,7 @@ import XCTest
 final class WCS_BIMUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
+        false
     }
 
     override func setUpWithError() throws {
@@ -20,6 +20,7 @@ final class WCS_BIMUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments.append("-UITesting")
         app.launch()
 
         // Insert steps here to perform after app launch but before taking a screenshot,

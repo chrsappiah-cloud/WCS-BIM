@@ -8,6 +8,7 @@ final class AIInteraction {
     var prompt: String
     var response: String
     var createdAt: Date
+    var project: Project?
 
     init(prompt: String, response: String, promptType: String = "custom") {
         self.id = UUID()

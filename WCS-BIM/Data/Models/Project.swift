@@ -20,14 +20,14 @@ final class Project {
     var pedestrianFlow: String
     var surroundingContext: String
 
-    @Relationship(deleteRule: .cascade) var landmarks: [Landmark] = []
-    @Relationship(deleteRule: .cascade) var elements: [BIMElement] = []
-    @Relationship(deleteRule: .cascade) var designOptions: [DesignOption] = []
-    @Relationship(deleteRule: .cascade) var issues: [Issue] = []
-    @Relationship(deleteRule: .cascade) var assets: [AssetRecord] = []
-    @Relationship(deleteRule: .cascade) var observations: [SiteObservation] = []
-    @Relationship(deleteRule: .cascade) var exportPackages: [ExportPackage] = []
-    @Relationship(deleteRule: .cascade) var aiInteractions: [AIInteraction] = []
+    @Relationship(deleteRule: .cascade, inverse: \Landmark.project) var landmarks: [Landmark] = []
+    @Relationship(deleteRule: .cascade, inverse: \BIMElement.project) var elements: [BIMElement] = []
+    @Relationship(deleteRule: .cascade, inverse: \DesignOption.project) var designOptions: [DesignOption] = []
+    @Relationship(deleteRule: .cascade, inverse: \Issue.project) var issues: [Issue] = []
+    @Relationship(deleteRule: .cascade, inverse: \AssetRecord.project) var assets: [AssetRecord] = []
+    @Relationship(deleteRule: .cascade, inverse: \SiteObservation.project) var observations: [SiteObservation] = []
+    @Relationship(deleteRule: .cascade, inverse: \ExportPackage.project) var exportPackages: [ExportPackage] = []
+    @Relationship(deleteRule: .cascade, inverse: \AIInteraction.project) var aiInteractions: [AIInteraction] = []
 
     init(
         name: String,

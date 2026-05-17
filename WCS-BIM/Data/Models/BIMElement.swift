@@ -18,6 +18,7 @@ final class BIMElement {
     var posX: Double
     var posY: Double
     var posZ: Double
+    var project: Project?
 
     init(
         name: String,

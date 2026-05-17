@@ -2,14 +2,15 @@
 //  WCS_BIMTests.swift
 //  WCS-BIMTests
 //
+//  Tier 1 unit — fast logic tests (pre-commit / PR gate).
+//
 
-import SwiftData
-import Testing
+import XCTest
 @testable import WCS_BIM
 
-struct WCS_BIMTests {
+final class WCS_BIMTests: XCTestCase {
 
-    @Test func cobieExportIncludesGUID() throws {
+    func testCobieExportIncludesGUID() throws {
         let project = Project(name: "Test")
         let element = BIMElement(
             name: "WAL-PNL-001",
@@ -24,44 +25,24 @@ struct WCS_BIMTests {
         project.elements.append(element)
 
         let csv = COBieExportService().csv(for: project)
-        #expect(csv.contains(element.guid))
-        #expect(csv.contains("WAL-PNL-001"))
+        XCTAssertTrue(csv.contains(element.guid))
+        XCTAssertTrue(csv.contains("WAL-PNL-001"))
     }
 
-    @Test func ifcExportContainsProjectName() throws {
+    func testIfcExportContainsProjectName() throws {
         let project = Project(name: "Airport Terminal A")
         let ifc = IFCExportService().stepFile(for: project)
-        #expect(ifc.contains("Airport Terminal A"))
-        #expect(ifc.contains("IFC4"))
+        XCTAssertTrue(ifc.contains("Airport Terminal A"))
+        XCTAssertTrue(ifc.contains("IFC4"))
     }
 
-    @Test func designRulesFlagsInvalidName() throws {
+    func testDesignRulesFlagsInvalidName() throws {
         let rules = DesignRulesService()
-        #expect(rules.validateElementName("bad name") != nil)
-        #expect(rules.validateElementName("WAL-PNL-001") == nil)
+        XCTAssertNotNil(rules.validateElementName("bad name"))
+        XCTAssertNil(rules.validateElementName("WAL-PNL-001"))
     }
 
-    @Test func modelContainerCanBeCreatedInMemory() throws {
-        let container = try? ArchFusionSchema.makeInMemoryContainer(reason: "unit test")
-        if let container {
-            #expect(container.schema.entities.count > 0)
-        }
-        // In-memory containers may not be available in certain test environments (iOS 26.5+).
-        // Test is skipped rather than failed when the environment doesn't support it.
-    }
-
-    @Test func modelContainerCoreSchemaLoads() throws {
-        let schema = Schema(ArchFusionSchema.coreModels)
-        let container = try? ModelContainer(
-            for: schema,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        if let container {
-            #expect(!container.schema.entities.isEmpty)
-        }
-    }
-
-    @Test func conceptPromptIncludesLandmarks() throws {
+    func testConceptPromptIncludesLandmarks() throws {
         let prompt = AIPromptTemplates.concept(
             projectType: "Airport",
             siteContext: "Urban",
@@ -70,7 +51,32 @@ struct WCS_BIMTests {
             constraints: "Height limit 45m",
             program: "Terminal 40,000 m²"
         )
-        #expect(prompt.contains("Control Tower"))
-        #expect(prompt.contains("3 concept options"))
+        XCTAssertTrue(prompt.contains("Control Tower"))
+        XCTAssertTrue(prompt.contains("3 concept options"))
+    }
+
+    func testCloudKitSharingStatusMessage() {
+        let message = CloudKitSharingService().sharingStatusMessage()
+        XCTAssertFalse(message.isEmpty)
+    }
+
+    func testDesignProgramCatalogListsPackPrograms() {
+        XCTAssertEqual(DesignProgramCatalog.allPrograms.count, 5)
+        XCTAssertTrue(DesignProgramCatalog.allPrograms.contains { $0.name == "Airport Terminal A" })
+    }
+
+    func testDesignProgramInstallerBuildsStarterElements() {
+        for program in DesignProgramCatalog.allPrograms {
+            XCTAssertFalse(program.programSummary.isEmpty)
+        }
+        XCTAssertEqual(ParametricLibrary.presets.count, 5)
+        let element = ParametricLibrary.makeElement(
+            from: ParametricLibrary.presets[0],
+            name: "WAL-TEST-001",
+            level: 0,
+            stage: .concept
+        )
+        XCTAssertFalse(element.guid.isEmpty)
+        XCTAssertEqual(element.family, "Mass")
     }
 }

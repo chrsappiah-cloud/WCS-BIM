@@ -11,27 +11,62 @@ struct ProjectListView: View {
 
     var body: some View {
         List {
+            Section {
+                CardView(
+                    title: "ArchFusion BIM",
+                    subtitle: "Professional field & model workspace",
+                    systemImage: "sparkles",
+                    chips: ["BIM", "Field", "Export"],
+                    pearl: true
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .accessibilityIdentifier("projects.heroCard")
+            }
+
             Section("Create") {
-                HStack {
-                    TextField("Project name", text: $newName)
-                    Button("Add") {
+                TextField("Project name", text: $newName)
+                    .font(WCSFont.body())
+                    .accessibilityIdentifier("project.nameField")
+
+                HStack(spacing: WCSSpacing.sm) {
+                    PrimaryButton("Add", layout: .compact) {
                         createProject(syncCloud: false)
                     }
-                    Button("Add + CloudKit", systemImage: "icloud") {
+                    .accessibilityIdentifier("project.addButton")
+
+                    SecondaryButton("Add + CloudKit") {
                         createProject(syncCloud: true)
                     }
+                    .accessibilityIdentifier("project.addCloudButton")
                 }
             }
+
             Section("Projects") {
                 ForEach(projects) { project in
-                    NavigationLink(project.name) {
+                    NavigationLink {
                         ProjectDetailView(project: project)
+                    } label: {
+                        CardView(
+                            title: project.name,
+                            subtitle: project.projectType.rawValue.capitalized,
+                            systemImage: "building.2",
+                            chips: [project.designStage.rawValue.capitalized]
+                        )
                     }
+                    .buttonStyle(.plain)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
                 .onDelete(perform: deleteProjects)
             }
         }
-        .navigationTitle("ArchFusion BIM")
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .navigationTitle("Projects")
+        .accessibilityIdentifier("projects.screen")
         .onAppear {
             locationService.requestPermission()
         }

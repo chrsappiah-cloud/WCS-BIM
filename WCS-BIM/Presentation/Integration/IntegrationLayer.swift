@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
@@ -5,9 +6,34 @@ struct SettingsView: View {
     @AppStorage("cloudKitEnabled") private var cloudKitEnabled = true
     @AppStorage("designStyle") private var designStyle = "Contemporary"
     @AppStorage("defaultProgram") private var defaultProgram = "Commercial building"
+    @Environment(\.modelContext) private var modelContext
+    @State private var installMessage: String?
 
     var body: some View {
         Form {
+            Section("Design pack") {
+                Button("Install all design programs") {
+                    let projects = DesignProgramInstaller.installAllPrograms(context: modelContext)
+                    installMessage = "Installed \(projects.count) program(s) with parametric library elements."
+                }
+                .accessibilityIdentifier("settings.installPrograms")
+
+                if let installMessage {
+                    Text(installMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("settings.installMessage")
+                }
+
+                ForEach(DesignProgramCatalog.allPrograms) { program in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(program.name).font(.subheadline)
+                        Text(program.programSummary)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
             Section("AI") {
                 SecureField("OpenAI API Key", text: $openAIApiKey)
                 Picker("Style", selection: $designStyle) {
@@ -22,81 +48,92 @@ struct SettingsView: View {
                 TextField("Program", text: $defaultProgram)
                 Toggle("Enable CloudKit", isOn: $cloudKitEnabled)
             }
+            Section("CloudKit") {
+                Text(CloudKitSharingService().sharingStatusMessage())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section("Guidance") {
                 Text("Use the app for concept options, site capture, coordination notes, export, and FM handover.")
             }
         }
         .navigationTitle("Settings")
+        .accessibilityIdentifier("settings.screen")
     }
 }
 
 struct AppShellView: View {
+    @State private var workspace = WorkspaceState()
+
     var body: some View {
         TabView {
-            NavigationStack { ProjectListView() }
+            // Six workflows; Export & Settings appear under More on compact widths.
+            NavigationStack { ProjectListView(workspace: workspace) }
                 .tabItem { Label("Projects", systemImage: "building.2") }
+                .accessibilityIdentifier("tab.projects")
+
             NavigationStack { SiteCaptureView() }
                 .tabItem { Label("Site", systemImage: "map") }
-            NavigationStack { InteractiveARContainer() }
+                .accessibilityIdentifier("tab.site")
+
+            NavigationStack { ARTabView() }
                 .tabItem { Label("AR", systemImage: "viewfinder") }
-            NavigationStack { AIAssistantContainer() }
+                .accessibilityIdentifier("tab.ar")
+
+            NavigationStack { AIAssistantView() }
                 .tabItem { Label("AI", systemImage: "sparkles") }
+                .accessibilityIdentifier("tab.ai")
+
             NavigationStack { ExportCenterView() }
                 .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
+                .accessibilityIdentifier("tab.export")
+
             NavigationStack { SettingsView() }
                 .tabItem { Label("Settings", systemImage: "gearshape") }
+                .accessibilityIdentifier("tab.settings")
         }
+        .tint(WCSColor.primary)
     }
 }
 
-struct AIAssistantContainer: View {
-    @AppStorage("openAIApiKey") private var apiKey = ""
-    @AppStorage("defaultProgram") private var defaultProgram = "Commercial building"
-    @State private var prompt = ""
-    @State private var response = ""
-    @State private var isLoading = false
+/// Project-aware AR tab wired to SwiftData (replaces standalone AR coordinator).
+struct ARTabView: View {
+    @Query(sort: \Project.createdAt, order: .reverse) private var projects: [Project]
+    @State private var selectedProjectID: UUID?
+    @State private var viewModel = ProjectDetailViewModel()
+
+    private var selectedProject: Project? {
+        guard let selectedProjectID else { return projects.first }
+        return projects.first { $0.id == selectedProjectID } ?? projects.first
+    }
 
     var body: some View {
-        VStack(spacing: 12) {
-            TextField("Ask for massing, zoning, circulation, sustainability...", text: $prompt, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-            Button(isLoading ? "Generating..." : "Generate") {
-                Task {
-                    isLoading = true
-                    defer { isLoading = false }
-                    do {
-                        let service = AIAssistantService(apiKey: apiKey)
-                        response = try await service.generateConcepts(
-                            projectName: "New Project",
-                            site: "Geo-located site",
-                            landmarks: ["Waterfront", "Transit hub"],
-                            program: prompt.isEmpty ? defaultProgram : prompt
-                        )
-                    } catch {
-                        response = "AI error: \(error.localizedDescription)"
+        Group {
+            if let project = selectedProject {
+                ARSiteSection(project: project, viewModel: viewModel)
+            } else {
+                ContentUnavailableView(
+                    "No Project",
+                    systemImage: "building.2",
+                    description: Text("Create a project in the Projects tab to use AR site capture.")
+                )
+                .accessibilityIdentifier("ar.emptyState")
+            }
+        }
+        .navigationTitle("AR Site")
+        .toolbar {
+            if projects.count > 1 {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Picker("Project", selection: $selectedProjectID) {
+                        ForEach(projects, id: \.id) { project in
+                            Text(project.name).tag(Optional(project.id))
+                        }
                     }
                 }
             }
-            ScrollView { Text(response).frame(maxWidth: .infinity, alignment: .leading) }
-            Spacer()
         }
-        .padding()
-        .navigationTitle("AI Assistant")
-    }
-}
-
-struct InteractiveARContainer: View {
-    @StateObject private var coordinator = ARPlacementCoordinator()
-
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-            InteractiveARView(coordinator: coordinator)
-                .ignoresSafeArea()
-            Text(coordinator.statusText)
-                .padding(8)
-                .background(.thinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .padding()
+        .onAppear {
+            selectedProjectID = projects.first?.id
         }
     }
 }

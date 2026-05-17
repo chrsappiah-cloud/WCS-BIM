@@ -14,6 +14,7 @@ final class AssetRecord {
     var maintenanceClass: String
     var guid: String
     var linkedElementGUID: String?
+    var project: Project?
 
     init(
         assetName: String,

@@ -10,6 +10,7 @@ final class Landmark {
     var category: String
     var note: String
     var arAnchorTransformData: Data?
+    var project: Project?
 
     init(
         title: String,

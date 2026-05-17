@@ -26,6 +26,7 @@ struct SiteCaptureView: View {
         }
         .mapStyle(.standard(elevation: .realistic))
         .navigationTitle("Site Capture")
+        .accessibilityIdentifier("site.capture.screen")
         .toolbar {
             if !projects.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {

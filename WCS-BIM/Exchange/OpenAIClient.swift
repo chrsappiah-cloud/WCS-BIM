@@ -80,7 +80,7 @@ actor OpenAIClient {
         return content
     }
 
-    private static func parseResponseText(_ data: Data) -> String? {
+    static func parseResponseText(_ data: Data) -> String? {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }

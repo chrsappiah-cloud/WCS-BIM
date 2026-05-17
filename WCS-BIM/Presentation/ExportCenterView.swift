@@ -36,18 +36,27 @@ struct ExportCenterView: View {
                 }
 
                 if let activeProject {
-                    Button("Export IFC") {
-                        viewModel.export("IFC", project: activeProject, context: modelContext)
+                    Section("Deliverables") {
+                        PrimaryButton("Export IFC") {
+                            viewModel.export("IFC", project: activeProject, context: modelContext)
+                        }
+                        .accessibilityIdentifier("export.ifc")
+                        PrimaryButton("Export COBie CSV") {
+                            viewModel.export("COBie", project: activeProject, context: modelContext)
+                        }
+                        .accessibilityIdentifier("export.cobie")
+                        PrimaryButton("Export PDF sheets") {
+                            viewModel.export("PDF", project: activeProject, context: modelContext)
+                        }
+                        .accessibilityIdentifier("export.pdf")
+                        SecondaryButton("Revit / DWG handoff JSON") {
+                            viewModel.export("DWG", project: activeProject, context: modelContext)
+                        }
+                        .accessibilityIdentifier("export.dwg")
                     }
-                    Button("Export COBie CSV") {
-                        viewModel.export("COBie", project: activeProject, context: modelContext)
-                    }
-                    Button("Export PDF sheets") {
-                        viewModel.export("PDF", project: activeProject, context: modelContext)
-                    }
-                    Button("Revit / DWG handoff JSON") {
-                        viewModel.export("DWG", project: activeProject, context: modelContext)
-                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
 
@@ -64,6 +73,7 @@ struct ExportCenterView: View {
             }
         }
         .navigationTitle("Export Center")
+        .accessibilityIdentifier("export.screen")
         .onAppear {
             if selectedProjectID == nil {
                 selectedProjectID = fixedProject?.id ?? projects.first?.id

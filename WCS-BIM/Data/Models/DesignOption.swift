@@ -11,6 +11,7 @@ final class DesignOption {
     var aiPrompt: String
     var isSelected: Bool
     var createdAt: Date
+    var project: Project?
 
     init(
         title: String,

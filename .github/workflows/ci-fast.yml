@@ -1,0 +1,49 @@
+# Pre-commit / push — cheap checks first (build + fast unit + contract).
+name: CI Fast
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  fast:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Resolve simulator destination
+        id: sim
+        run: |
+          DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
+            | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
+          if [ -z "$DEST" ]; then
+            echo "destination=generic/platform=iOS Simulator" >> "$GITHUB_OUTPUT"
+          else
+            NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+            OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+            echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' build
+
+      - name: Tier 1 unit tests
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMTests/WCS_BIMTests \
+            -only-testing:WCS-BIMTests/AppSettingsUpdaterTests \
+            test
+
+      - name: Tier 4 contract tests
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMTests/OpenAIResponseContractTests \
+            test
