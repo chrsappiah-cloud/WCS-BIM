@@ -1,0 +1,51 @@
+name: ArchFusion BIM CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Xcode
+      run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+    
+    - name: Install CocoaPods dependencies
+      run: |
+        cd WCS-BIM
+        pod install --repo-update
+    
+    - name: Build project
+      run: |
+        xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -destination 'platform=iOS Simulator,name=iPhone 16' build
+    
+    - name: Run unit tests
+      run: |
+        xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing WCS-BIMTests test
+    
+    - name: Run UI tests
+      run: |
+        xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing WCS-BIMUITests test
+        
+    - name: Upload build artifacts
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ArchFusion-BIM-Build
+        path: |
+          WCS-BIM/build/
+          WCS-BIM/DerivedData/
+          
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Test-Results
+        path: |
+          WCS-BIM/**/Logs/Test/**/*.xcresult
