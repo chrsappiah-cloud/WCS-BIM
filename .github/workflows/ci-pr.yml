@@ -44,7 +44,9 @@ jobs:
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
+            -parallel-testing-enabled NO \
             -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
+            -only-testing:WCS-BIMUITests/DesignSystemUITests \
             test
 
       - name: Upload test results
