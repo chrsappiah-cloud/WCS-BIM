@@ -1,20 +1,33 @@
-# Enforced CI on every push to main — build, unit, smoke UI, design-system UI.
-name: CI Main
+# API integration gate — catalog validation + unit tests for sensors/AI hub.
+name: CI API Integrations
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'WCS-BIM/APIIntegration/**'
+      - 'WCS-BIM/Presentation/FieldSystems/**'
+      - 'WCS-BIMTests/Integration/APIIntegrationTests.swift'
+      - 'scripts/api/**'
+      - '.github/workflows/ci-integrations-api.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'WCS-BIM/APIIntegration/**'
+      - 'WCS-BIM/Presentation/FieldSystems/**'
+      - 'WCS-BIMTests/Integration/APIIntegrationTests.swift'
+      - 'scripts/api/**'
+      - '.github/workflows/ci-integrations-api.yml'
   workflow_dispatch:
 
-concurrency:
-  group: ci-main-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-and-test:
+  validate-integrations:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate integration sources
+        run: bash scripts/api/validate-integrations.sh
 
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
@@ -32,38 +45,14 @@ jobs:
             echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Validate API integrations
-        run: bash scripts/api/validate-integrations.sh
-
       - name: Build
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' build
 
-      - name: Unit tests (fast + design tokens)
+      - name: API integration unit tests
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
-            -only-testing:WCS-BIMTests/WCS_BIMTests \
-            -only-testing:WCS-BIMTests/AppSettingsUpdaterTests \
-            -only-testing:WCS-BIMTests/OpenAIResponseContractTests \
-            -only-testing:WCS-BIMTests/DesignSystemTokenTests \
-            -only-testing:WCS-BIMTests/SubscriptionAccessTests \
             -only-testing:WCS-BIMTests/APIIntegrationTests \
             test
-
-      - name: Tier 1 UI smoke
-        run: |
-          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
-            -destination '${{ steps.sim.outputs.destination }}' \
-            -parallel-testing-enabled NO \
-            -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
-            -only-testing:WCS-BIMUITests/DesignSystemUITests \
-            test
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: main-ci-results
-          path: '**/Logs/Test/**/*.xcresult'

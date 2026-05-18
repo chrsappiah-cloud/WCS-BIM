@@ -5,6 +5,8 @@ cd "$(dirname "$0")/.."
 
 DEST="${SIM_DESTINATION:-platform=iOS Simulator,name=iPhone 17 Pro Max,OS=26.5}"
 
+bash scripts/api/validate-integrations.sh
+
 xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
   -destination "$DEST" build
 

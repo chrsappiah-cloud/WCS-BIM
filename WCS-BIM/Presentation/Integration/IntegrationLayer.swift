@@ -3,8 +3,11 @@ import SwiftUI
 
 struct SettingsView: View {
     var subscriptionManager: SubscriptionManager
+    var fieldSystemsHub: APIIntegrationHub
 
     @AppStorage("openAIApiKey") private var openAIApiKey = ""
+    @AppStorage("huggingFaceApiKey") private var huggingFaceApiKey = ""
+    @AppStorage("preferredAIProvider") private var preferredAIProvider = "openai.chat"
     @AppStorage("cloudKitEnabled") private var cloudKitEnabled = true
     @AppStorage("designStyle") private var designStyle = "Contemporary"
     @AppStorage("defaultProgram") private var defaultProgram = "Commercial building"
@@ -56,8 +59,18 @@ struct SettingsView: View {
                     }
                 }
             }
-            Section("AI") {
+            Section("AI & APIs") {
                 SecureField("OpenAI API Key", text: $openAIApiKey)
+                SecureField("Hugging Face API Key", text: $huggingFaceApiKey)
+                Picker("Preferred AI provider", selection: $preferredAIProvider) {
+                    Text("OpenAI").tag("openai.chat")
+                    Text("Hugging Face").tag("huggingface.inference")
+                    Text("Offline").tag("offline.templates")
+                }
+                NavigationLink("Field Systems (sensors & capture)") {
+                    FieldSystemsView(hub: fieldSystemsHub, project: nil)
+                }
+                .accessibilityIdentifier("settings.fieldSystems")
                 Picker("Style", selection: $designStyle) {
                     Text("Contemporary").tag("Contemporary")
                     Text("Minimal").tag("Minimal")
@@ -88,11 +101,13 @@ struct AppShellView: View {
     @State private var workspace = WorkspaceState()
     @State private var subscriptionAccess: SubscriptionAccessController
     @State private var subscriptionManager: SubscriptionManager
+    @State private var fieldSystemsHub: APIIntegrationHub
 
     init() {
         let access = SubscriptionAccessController()
         _subscriptionAccess = State(wrappedValue: access)
         _subscriptionManager = State(wrappedValue: SubscriptionManager(access: access))
+        _fieldSystemsHub = State(wrappedValue: APIIntegrationHub())
     }
 
     var body: some View {
@@ -118,7 +133,12 @@ struct AppShellView: View {
                 .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
                 .accessibilityIdentifier("tab.export")
 
-            NavigationStack { SettingsView(subscriptionManager: subscriptionManager) }
+            NavigationStack {
+                SettingsView(
+                    subscriptionManager: subscriptionManager,
+                    fieldSystemsHub: fieldSystemsHub
+                )
+            }
                 .tabItem { Label("Settings", systemImage: "gearshape") }
                 .accessibilityIdentifier("tab.settings")
         }

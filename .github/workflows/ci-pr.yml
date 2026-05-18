@@ -32,6 +32,9 @@ jobs:
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' build
 
+      - name: Validate API integrations
+        run: bash scripts/api/validate-integrations.sh
+
       - name: Validate TestFlight admin scripts
         run: bash scripts/testflight/enforce_ci_check.sh
 
@@ -41,6 +44,13 @@ jobs:
             -destination '${{ steps.sim.outputs.destination }}' \
             -only-testing:WCS-BIMTests \
             -skip-testing:WCS-BIMTests/ModelContainerBootstrapTests \
+            test
+
+      - name: API integration unit tests
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMTests/APIIntegrationTests \
             test
 
       - name: Tier 1 UI smoke (critical flows)

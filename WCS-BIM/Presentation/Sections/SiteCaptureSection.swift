@@ -15,6 +15,8 @@ struct SiteCaptureSection: View {
     @State private var observationTitle = "Site photo"
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showRoomPlan = false
+    @State private var showCamera = false
+    @State private var fieldHub = APIIntegrationHub()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -69,9 +71,15 @@ struct SiteCaptureSection: View {
 
                 Section("Photos & observations") {
                     TextField("Observation title", text: $observationTitle)
-                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        Label("Capture site photo", systemImage: "camera.fill")
+                    PrimaryButton("Live camera (AVFoundation)", layout: .compact) {
+                        fieldHub.activateFieldSensors()
+                        showCamera = true
                     }
+                    .accessibilityIdentifier("site.capture.camera")
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Import from library", systemImage: "photo.on.rectangle")
+                    }
+                    .accessibilityIdentifier("site.capture.photosPicker")
                     .onChange(of: selectedPhoto) { _, item in
                         Task { await importPhoto(from: item) }
                     }
@@ -94,6 +102,17 @@ struct SiteCaptureSection: View {
         .onAppear {
             locationService.requestPermission()
             siteContextService.syncProjectFields(from: project)
+            fieldHub.activateFieldSensors()
+        }
+        .sheet(isPresented: $showCamera) {
+            AppleCameraCaptureView(
+                onImage: { image in
+                    showCamera = false
+                    Task { await importCapturedImage(image) }
+                },
+                onCancel: { showCamera = false }
+            )
+            .ignoresSafeArea()
         }
         .sheet(isPresented: $showRoomPlan) {
             NavigationStack {
@@ -123,23 +142,24 @@ struct SiteCaptureSection: View {
         guard let item,
               let data = try? await item.loadTransferable(type: Data.self),
               let image = UIImage(data: data) else { return }
+        await importCapturedImage(image)
+        selectedPhoto = nil
+    }
 
+    private func importCapturedImage(_ image: UIImage) async {
         let obsID = UUID()
-        let path = (try? SitePhotoStore.save(image, projectID: project.id, observationID: obsID)) ?? ""
-        let ocrText = await ocrService.recognizeText(in: image)
-
+        let media = await fieldHub.processCapturedImage(image, projectID: project.id, observationID: obsID)
         let observation = SiteObservation(
             title: observationTitle.isEmpty ? "Site photo" : observationTitle,
-            note: ocrText.isEmpty ? "Photo captured on site." : ocrText,
-            latitude: locationService.currentLocation?.coordinate.latitude,
-            longitude: locationService.currentLocation?.coordinate.longitude,
-            photoPath: path.isEmpty ? nil : path
+            note: media.ocrText.isEmpty ? "Photo captured on site." : media.ocrText,
+            latitude: media.latitude,
+            longitude: media.longitude,
+            photoPath: media.savedPath
         )
         observation.id = obsID
         project.observations.append(observation)
         modelContext.insert(observation)
         observationTitle = "Site photo"
-        selectedPhoto = nil
     }
 }
 
