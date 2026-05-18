@@ -36,9 +36,18 @@ jobs:
         run: |
           DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
             | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
-          NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
-          OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
-          echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          if [ -z "$DEST" ]; then
+            echo "destination=generic/platform=iOS Simulator" >> "$GITHUB_OUTPUT"
+          else
+            NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+            OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+            echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' build
 
       - name: Unit tests (simulator gate)
         run: |
@@ -61,6 +70,8 @@ jobs:
           EOF
 
       - name: Archive and upload to TestFlight
+        env:
+          PATH: /usr/bin:/bin:/usr/sbin:/sbin:${{ env.PATH }}
         run: bash scripts/testflight/archive-and-upload.sh
 
       - name: List TestFlight builds
