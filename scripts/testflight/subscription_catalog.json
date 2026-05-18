@@ -1,0 +1,32 @@
+{
+  "app": "wcs.WCS-BIM",
+  "testflight_url": "https://appstoreconnect.apple.com/teams/70c46c69-5d6d-438d-b300-31df2b93163a/apps/6770373495/testflight",
+  "products": [
+    {
+      "id": "wcs.bim.pro.monthly",
+      "tier": "pro",
+      "display_name": "ArchFusion Pro",
+      "price_hint_usd": 19.99,
+      "features": ["Unlimited projects", "IFC/COBie export", "AI assistant"]
+    },
+    {
+      "id": "wcs.bim.team.monthly",
+      "tier": "team",
+      "display_name": "ArchFusion Team",
+      "price_hint_usd": 49.99,
+      "features": ["Everything in Pro", "CloudKit sharing", "5 seats"]
+    },
+    {
+      "id": "wcs.bim.enterprise.monthly",
+      "tier": "enterprise",
+      "display_name": "ArchFusion Enterprise",
+      "price_hint_usd": 149.99,
+      "features": ["Everything in Team", "Priority support", "Custom export pipelines"]
+    }
+  ],
+  "testflight_groups": [
+    "WCS Internal Testers",
+    "WCS External Testers",
+    "WCS Subscription Beta"
+  ]
+}

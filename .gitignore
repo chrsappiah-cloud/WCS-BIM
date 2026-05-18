@@ -3,5 +3,8 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .venv-manual/
+scripts/testflight/.venv/
+scripts/testflight/.env
+**/*.p8
 build/
 *.xcresult

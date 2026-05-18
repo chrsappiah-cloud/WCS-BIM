@@ -1,0 +1,104 @@
+{
+  "identifier" : "WCS_BIM_Subscriptions",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6770373495",
+    "_developerTeamID" : "TM2WG7HH96",
+    "_lastSynchronizedDate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "wcs_bim_group",
+      "localizations" : [
+
+      ],
+      "name" : "ArchFusion BIM",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "pro_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Pro field workspace",
+              "displayName" : "ArchFusion Pro",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wcs.bim.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "wcs_bim_group",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "49.99",
+          "familyShareable" : true,
+          "groupNumber" : 2,
+          "internalID" : "team_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Team CloudKit and seats",
+              "displayName" : "ArchFusion Team",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wcs.bim.team.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Team Monthly",
+          "subscriptionGroupID" : "wcs_bim_group",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "149.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "enterprise_monthly",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Enterprise pipelines",
+              "displayName" : "ArchFusion Enterprise",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "wcs.bim.enterprise.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Enterprise Monthly",
+          "subscriptionGroupID" : "wcs_bim_group",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

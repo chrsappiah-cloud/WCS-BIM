@@ -2,6 +2,8 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
+    var subscriptionManager: SubscriptionManager
+
     @AppStorage("openAIApiKey") private var openAIApiKey = ""
     @AppStorage("cloudKitEnabled") private var cloudKitEnabled = true
     @AppStorage("designStyle") private var designStyle = "Contemporary"
@@ -11,6 +13,26 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("Subscription & TestFlight") {
+                NavigationLink("My subscription") {
+                    UserSubscriptionPanelView(manager: subscriptionManager)
+                }
+                .accessibilityIdentifier("settings.subscription")
+
+                NavigationLink("Admin access") {
+                    AdminAccessPanelView(access: subscriptionManager.access)
+                }
+                .accessibilityIdentifier("settings.adminAccess")
+
+                HStack {
+                    Text("Current plan")
+                    Spacer()
+                    StatusChip(
+                        text: subscriptionManager.access.activeTier.displayName,
+                        tone: .inProgress
+                    )
+                }
+            }
             Section("Design pack") {
                 Button("Install all design programs") {
                     let projects = DesignProgramInstaller.installAllPrograms(context: modelContext)
@@ -64,6 +86,14 @@ struct SettingsView: View {
 
 struct AppShellView: View {
     @State private var workspace = WorkspaceState()
+    @State private var subscriptionAccess: SubscriptionAccessController
+    @State private var subscriptionManager: SubscriptionManager
+
+    init() {
+        let access = SubscriptionAccessController()
+        _subscriptionAccess = State(wrappedValue: access)
+        _subscriptionManager = State(wrappedValue: SubscriptionManager(access: access))
+    }
 
     var body: some View {
         TabView {
@@ -88,7 +118,7 @@ struct AppShellView: View {
                 .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
                 .accessibilityIdentifier("tab.export")
 
-            NavigationStack { SettingsView() }
+            NavigationStack { SettingsView(subscriptionManager: subscriptionManager) }
                 .tabItem { Label("Settings", systemImage: "gearshape") }
                 .accessibilityIdentifier("tab.settings")
         }

@@ -32,6 +32,9 @@ jobs:
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' build
 
+      - name: Validate TestFlight admin scripts
+        run: bash scripts/testflight/enforce_ci_check.sh
+
       - name: Full unit suite (Tiers 1 + 4)
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \

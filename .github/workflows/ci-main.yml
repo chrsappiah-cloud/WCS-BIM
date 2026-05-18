@@ -45,6 +45,7 @@ jobs:
             -only-testing:WCS-BIMTests/AppSettingsUpdaterTests \
             -only-testing:WCS-BIMTests/OpenAIResponseContractTests \
             -only-testing:WCS-BIMTests/DesignSystemTokenTests \
+            -only-testing:WCS-BIMTests/SubscriptionAccessTests \
             test
 
       - name: Tier 1 UI smoke

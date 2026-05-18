@@ -5,6 +5,7 @@ Enforce these rules on `main` so CI/CD blocks broken builds:
 1. **Require status checks**
    - `build-and-test` (workflow: **CI Main**)
    - `pr-gate` (workflow: **CI Pull Request**)
+   - `validate-scripts` (workflow: **CI TestFlight Admin**)
 
 2. **Require branches to be up to date** before merge.
 

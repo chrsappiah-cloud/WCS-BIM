@@ -1,0 +1,49 @@
+# TestFlight admin scripts + subscription module CI
+name: CI TestFlight Admin
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install script dependencies
+        run: pip install -r scripts/testflight/requirements.txt
+
+      - name: Validate TestFlight admin CLI
+        run: bash scripts/testflight/enforce_ci_check.sh
+
+      - name: Block committed secrets
+        run: |
+          ! git grep -E 'BEGIN PRIVATE KEY|AuthKey_.*\.p8' -- ':!*.md' ':!config.example.env' || \
+            (echo "Do not commit API keys"; exit 1)
+
+  testflight-live:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r scripts/testflight/requirements.txt
+      - name: List TestFlight builds
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_PATH: /tmp/AuthKey.p8
+          ASC_APP_ID: ${{ secrets.ASC_APP_ID }}
+        run: |
+          echo "${{ secrets.ASC_PRIVATE_KEY }}" > /tmp/AuthKey.p8
+          python scripts/testflight/admin_cli.py testflight list-builds
