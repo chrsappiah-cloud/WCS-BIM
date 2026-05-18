@@ -36,6 +36,12 @@ struct SettingsView: View {
                     )
                 }
             }
+            Section("Appearance") {
+                NavigationLink("Luxe dashboard (chocolate)") {
+                    WCSLuxeHomeView()
+                }
+                .accessibilityIdentifier("settings.luxeDashboard")
+            }
             Section("Design pack") {
                 Button("Install all design programs") {
                     let projects = DesignProgramInstaller.installAllPrograms(context: modelContext)

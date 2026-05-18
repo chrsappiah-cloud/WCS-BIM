@@ -45,6 +45,23 @@ python admin_cli.py --dry-run testflight list-groups
 
 Workflow `ci-testflight.yml` runs script validation on every PR. Optional job `testflight-invite` uses secrets when triggered manually.
 
+## Production TestFlight upload (local)
+
+```bash
+# 1) All unit tests on connected iPhone
+./scripts/test-device-units.sh
+
+# 2) Install debug build on device
+./scripts/install-device.sh
+
+# 3) Archive Release + upload (requires scripts/testflight/.env with ASC API key)
+./scripts/testflight/archive-and-upload.sh
+```
+
+GitHub: workflow **CI TestFlight Upload** (`ci-testflight-upload.yml`) on `v*` tags or manual dispatch.
+
+**Note:** If export fails with `rsync: --extended-attributes: unknown option`, ensure `/usr/bin` precedes Homebrew in `PATH` (the script does this automatically).
+
 ## In-app panels
 
 - **Settings → Subscription** — user purchases / restore (StoreKit 2).

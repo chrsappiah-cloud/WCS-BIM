@@ -17,6 +17,14 @@ final class DesignSystemTokenTests: XCTestCase {
         _ = WCSColor.error
     }
 
+    func testLuxePaletteResolves() {
+        _ = WCSLuxePalette.cocoa
+        _ = WCSLuxePalette.espresso
+        _ = WCSLuxePalette.diamond
+        _ = WCSLuxePalette.champagne
+        _ = WCSLuxePalette.gold
+    }
+
     func testInspectorParamIdentity() {
         let param = InspectorParam(key: "Width", value: "200")
         XCTAssertEqual(param.id, "Width")

@@ -44,3 +44,7 @@ import SwiftUI
     }
     return Host().wcsTheme()
 }
+
+#Preview("Luxe Home") {
+    WCSLuxeHomeView()
+}

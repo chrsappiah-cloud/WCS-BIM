@@ -12,7 +12,7 @@ Enforce these rules on `main` so CI/CD blocks broken builds:
 
 3. **Require pull request reviews** (1 reviewer) for production repos.
 
-4. **Tags / releases** — run **CI Release Candidate** on `v*` tags before App Store submission.
+4. **Tags / releases** — run **CI Release Candidate** and **CI TestFlight Upload** on `v*` tags before App Store submission.
 
 Local parity:
 
