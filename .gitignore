@@ -4,6 +4,7 @@ DerivedData/
 xcuserdata/
 .venv-manual/
 scripts/testflight/.venv/
+scripts/testflight/__pycache__/
 scripts/testflight/.env
 **/*.p8
 build/
