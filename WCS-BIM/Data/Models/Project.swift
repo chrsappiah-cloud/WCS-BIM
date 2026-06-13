@@ -28,6 +28,9 @@ final class Project {
     @Relationship(deleteRule: .cascade, inverse: \SiteObservation.project) var observations: [SiteObservation] = []
     @Relationship(deleteRule: .cascade, inverse: \ExportPackage.project) var exportPackages: [ExportPackage] = []
     @Relationship(deleteRule: .cascade, inverse: \AIInteraction.project) var aiInteractions: [AIInteraction] = []
+    @Relationship(deleteRule: .cascade, inverse: \MaterialRecord.project) var materials: [MaterialRecord] = []
+    @Relationship(deleteRule: .cascade, inverse: \MaterialTestRecord.project) var materialTests: [MaterialTestRecord] = []
+    @Relationship(deleteRule: .cascade, inverse: \FabricationModuleRecord.project) var fabricationModules: [FabricationModuleRecord] = []
 
     init(
         name: String,

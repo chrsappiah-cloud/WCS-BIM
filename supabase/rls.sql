@@ -1,0 +1,7 @@
+-- WCS-BIM production RLS and storage application order.
+-- Apply after supabase/schema.sql:
+--
+-- 1. docs/migrations/20260612_supabase_rls_storage.sql
+-- 2. docs/migrations/20260613_organization_roles_dashboard.sql
+--
+-- The organization migration retires overlapping legacy project policies.

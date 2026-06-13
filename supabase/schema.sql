@@ -1,0 +1,9 @@
+-- WCS-BIM production schema application order.
+-- Supabase SQL Editor does not support psql \i directives; apply these files in order:
+--
+-- 1. docs/bim-materials-schema.sql
+-- 2. docs/migrations/20260612_materials_commercial_metadata.sql
+-- 3. docs/migrations/20260612_model_registry_notes.sql
+-- 4. docs/migrations/20260613_organization_roles_dashboard.sql
+--
+-- The files are idempotent and remain the canonical schema sources.

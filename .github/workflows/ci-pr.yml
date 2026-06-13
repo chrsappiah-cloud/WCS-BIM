@@ -46,6 +46,13 @@ jobs:
             -skip-testing:WCS-BIMTests/ModelContainerBootstrapTests \
             test
 
+      - name: UI function registry unit tests
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMTests/UIFunctionRegistryTests \
+            test
+
       - name: API integration unit tests
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
@@ -60,6 +67,7 @@ jobs:
             -parallel-testing-enabled NO \
             -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
             -only-testing:WCS-BIMUITests/DesignSystemUITests \
+            -only-testing:WCS-BIMUITests/UIFunctionMatrixUITests/testRegistryCatalogIsComplete \
             test
 
       - name: Upload test results

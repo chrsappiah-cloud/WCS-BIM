@@ -50,6 +50,7 @@ jobs:
             -only-testing:WCS-BIMTests/DesignSystemTokenTests \
             -only-testing:WCS-BIMTests/SubscriptionAccessTests \
             -only-testing:WCS-BIMTests/APIIntegrationTests \
+            -only-testing:WCS-BIMTests/UIFunctionRegistryTests \
             test
 
       - name: Tier 1 UI smoke
@@ -59,6 +60,8 @@ jobs:
             -parallel-testing-enabled NO \
             -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
             -only-testing:WCS-BIMUITests/DesignSystemUITests \
+            -only-testing:WCS-BIMUITests/UIFunctionMatrixUITests/testRegistryCatalogIsComplete \
+            -only-testing:WCS-BIMUITests/AllUIUnitsUITests \
             test
 
       - name: Upload test results

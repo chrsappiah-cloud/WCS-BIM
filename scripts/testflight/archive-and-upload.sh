@@ -50,7 +50,7 @@ if [ -f "$ENV_FILE" ]; then
   set +a
 fi
 
-if [ -f "$ENV_FILE" ]; then
+if [ -n "${ASC_KEY_ID:-}" ] && [ -n "${ASC_ISSUER_ID:-}" ] && { [ -n "${ASC_PRIVATE_KEY:-}" ] || [ -n "${ASC_PRIVATE_KEY_PATH:-}" ]; }; then
   exec "$ROOT/scripts/testflight/upload-ipa.sh" "$IPA"
 fi
 
@@ -59,6 +59,9 @@ echo "  ./scripts/testflight/upload-ipa.sh \"$IPA\""
 echo "Or upload via Xcode Organizer / Transporter."
 echo "IPA ready at: $IPA"
 open "$EXPORT_PATH" 2>/dev/null || true
+if [ "${CI:-false}" = "true" ] || [ "${REQUIRE_UPLOAD:-0}" = "1" ]; then
+  exit 2
+fi
 exit 0
 
 echo "Upload submitted. Processing in App Store Connect → TestFlight (app 6770373495)."

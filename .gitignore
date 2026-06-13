@@ -3,6 +3,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .venv-manual/
+**/.idea/
 scripts/testflight/.venv/
 scripts/testflight/__pycache__/
 scripts/testflight/.env

@@ -49,6 +49,7 @@ struct SiteCaptureView: View {
                         SiteCaptureSection(project: project, viewModel: ProjectDetailViewModel())
                     }
                     .buttonStyle(.bordered)
+                    .accessibilityIdentifier("site.capture.fullLink")
                 }
             }
             .padding()

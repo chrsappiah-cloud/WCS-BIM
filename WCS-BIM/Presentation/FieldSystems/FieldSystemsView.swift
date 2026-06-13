@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Admin/user panel for Apple sensors, capture APIs, and external AI providers.
 struct FieldSystemsView: View {
@@ -8,6 +9,9 @@ struct FieldSystemsView: View {
 
     @AppStorage("preferredAIProvider") private var preferredAIProvider = "openai.chat"
     @State private var showCamera = false
+    @State private var showFileImporter = false
+    @State private var isUploading = false
+    @State private var uploadStatus = ""
     @State private var aiPrompt = "Summarize site capture priorities for BIM coordination."
     @Environment(\.modelContext) private var modelContext
 
@@ -48,6 +52,28 @@ struct FieldSystemsView: View {
                         .font(.caption)
                         .lineLimit(4)
                         .accessibilityIdentifier("fieldSystems.lastOCR")
+                }
+            }
+
+            Section("Project files") {
+                PrimaryButton("Choose and upload file", layout: .fullWidth, isEnabled: project != nil && !isUploading) {
+                    showFileImporter = true
+                }
+                .accessibilityIdentifier("fieldSystems.uploadFile")
+
+                if isUploading {
+                    ProgressView("Uploading to private project storage")
+                }
+                if !uploadStatus.isEmpty {
+                    Text(uploadStatus)
+                        .font(.caption)
+                        .foregroundStyle(uploadStatus.hasPrefix("Uploaded") ? Color.green : Color.orange)
+                        .textSelection(.enabled)
+                }
+                if project == nil {
+                    Text("Open Field Systems from a project to upload files.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -110,11 +136,46 @@ struct FieldSystemsView: View {
             )
             .ignoresSafeArea()
         }
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.pdf, .image, .commaSeparatedText, .data],
+            allowsMultipleSelection: false
+        ) { result in
+            Task { await upload(result) }
+        }
     }
 
     private func coordinateLabel(_ snapshot: SensorSnapshot) -> String {
         guard let lat = snapshot.latitude, let lon = snapshot.longitude else { return "—" }
         return String(format: "%.5f, %.5f", lat, lon)
+    }
+
+    private func upload(_ result: Result<[URL], any Error>) async {
+        guard let project else { return }
+        isUploading = true
+        uploadStatus = ""
+        defer { isUploading = false }
+
+        do {
+            guard let url = try result.get().first else { return }
+            let accessed = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessed { url.stopAccessingSecurityScopedResource() }
+            }
+            let data = try Data(contentsOf: url)
+            let contentType = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType
+                ?? "application/octet-stream"
+            let api = try BIMAPIClient.configured()
+            let uploaded = try await api.uploadFile(
+                data: data,
+                filename: url.lastPathComponent,
+                contentType: contentType,
+                projectID: project.id.uuidString
+            )
+            uploadStatus = "Uploaded: \(uploaded.path)"
+        } catch {
+            uploadStatus = "Upload failed: \(error.localizedDescription)"
+        }
     }
 
     private func persistObservation(from media: CapturedSiteMedia) {

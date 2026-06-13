@@ -46,7 +46,10 @@ final class Tier3ScreenUITests: WCS_BIMUITestCase {
     func testExportEmptyScreen() throws {
         let app = launchApp()
         selectTab("Export", in: app)
-        XCTAssertTrue(app.navigationBars["Export Center"].waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.descendants(matching: .any)["export.screen"].waitForExistence(timeout: 10)
+                || app.navigationBars["Export Center"].waitForExistence(timeout: 5)
+        )
     }
 
     @MainActor

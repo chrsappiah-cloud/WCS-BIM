@@ -12,17 +12,35 @@ if [ -z "$IPA" ] || [ ! -f "$IPA" ]; then
 fi
 
 ENV_FILE="$ROOT/scripts/testflight/.env"
-if [ ! -f "$ENV_FILE" ]; then
-  echo "Missing $ENV_FILE — copy config.example.env and add your App Store Connect API key." >&2
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+if [ -z "${ASC_KEY_ID:-}" ] || [ -z "${ASC_ISSUER_ID:-}" ]; then
+  echo "Missing App Store Connect API credentials." >&2
+  echo "Set ASC_KEY_ID and ASC_ISSUER_ID in the environment or $ENV_FILE." >&2
   echo "IPA ready: $IPA" >&2
-  echo "Or upload with Transporter / Xcode Organizer → Distribute App." >&2
   exit 2
 fi
 
-set -a
-# shellcheck disable=SC1090
-source "$ENV_FILE"
-set +a
+KEY_STORE="$HOME/.appstoreconnect/private_keys"
+KEY_TARGET="$KEY_STORE/AuthKey_${ASC_KEY_ID}.p8"
+mkdir -p "$KEY_STORE"
+
+if [ -n "${ASC_PRIVATE_KEY_PATH:-}" ] && [ -f "${ASC_PRIVATE_KEY_PATH}" ]; then
+  cp "${ASC_PRIVATE_KEY_PATH}" "$KEY_TARGET"
+elif [ -n "${ASC_PRIVATE_KEY:-}" ]; then
+  printf '%s\n' "${ASC_PRIVATE_KEY}" > "$KEY_TARGET"
+else
+  echo "Missing ASC private key. Set ASC_PRIVATE_KEY_PATH or ASC_PRIVATE_KEY." >&2
+  echo "IPA ready: $IPA" >&2
+  exit 2
+fi
+
+chmod 600 "$KEY_TARGET"
 
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 xcrun altool --upload-app --type ios --file "$IPA" \

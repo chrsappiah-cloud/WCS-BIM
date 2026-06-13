@@ -19,6 +19,8 @@ xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
 xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
   -destination "$DEST" \
   -only-testing:WCS-BIMUITests/Tier1SmokeUITests \
+  -only-testing:WCS-BIMUITests/DesignSystemUITests \
+  -only-testing:WCS-BIMUITests/UIFunctionMatrixUITests/testRegistryCatalogIsComplete \
   test
 
 python3 scripts/generate-test-catalog.py >/dev/null 2>&1 || true

@@ -21,12 +21,13 @@ final class WCS_BIMUITestsLaunchTests: XCTestCase {
     func testLaunch() throws {
         let app = XCUIApplication()
         app.launchArguments.append("-UITesting")
+        app.launchEnvironment["UITESTING"] = "1"
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        XCTAssertTrue(
+            app.tabBars.buttons["Projects"].waitForExistence(timeout: 45)
+                || app.textFields["project.nameField"].waitForExistence(timeout: 10)
+        )
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"

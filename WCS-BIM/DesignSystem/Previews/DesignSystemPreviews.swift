@@ -48,3 +48,10 @@ import SwiftUI
 #Preview("Luxe Home") {
     WCSLuxeHomeView()
 }
+
+#Preview("Navigation") {
+    NavigationStack {
+        WCSNavigationShowcaseView()
+    }
+    .wcsTheme()
+}

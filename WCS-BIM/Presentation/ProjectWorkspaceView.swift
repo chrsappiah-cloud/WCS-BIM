@@ -8,7 +8,7 @@ struct ProjectWorkspaceView: View {
     @State private var selectedTab: ProjectTab = .overview
 
     enum ProjectTab: String, CaseIterable, Identifiable {
-        case overview, site, design, massing, ar, ai, export, fm
+        case overview, site, design, massing, ar, ai, aiBIM, export, fm
 
         var id: String { rawValue }
 
@@ -20,6 +20,7 @@ struct ProjectWorkspaceView: View {
             case .massing: "Massing"
             case .ar: "AR"
             case .ai: "AI"
+            case .aiBIM: "AI BIM"
             case .export: "Export"
             case .fm: "FM"
             }
@@ -33,6 +34,7 @@ struct ProjectWorkspaceView: View {
             case .massing: "square.stack.3d.down.right"
             case .ar: "arkit"
             case .ai: "sparkles"
+            case .aiBIM: "shippingbox.and.arrow.backward"
             case .export: "square.and.arrow.up"
             case .fm: "wrench.and.screwdriver"
             }
@@ -63,6 +65,8 @@ struct ProjectWorkspaceView: View {
                     ARSiteSection(project: project, viewModel: viewModel)
                 case .ai:
                     AIAssistantView(project: project)
+                case .aiBIM:
+                    AIBIMLabView(project: project)
                 case .export:
                     ExportCenterView(project: project)
                 case .fm:
@@ -129,6 +133,9 @@ struct ProjectOverviewSection: View {
                 LabeledContent("Issues", value: "\(project.issues.count)")
                 LabeledContent("Assets", value: "\(project.assets.count)")
                 LabeledContent("AI interactions", value: "\(project.aiInteractions.count)")
+                LabeledContent("Materials", value: "\(project.materials.count)")
+                LabeledContent("Material tests", value: "\(project.materialTests.count)")
+                LabeledContent("Fabrication modules", value: "\(project.fabricationModules.count)")
             }
         }
     }

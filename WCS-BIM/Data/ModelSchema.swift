@@ -33,13 +33,7 @@ enum ArchFusionSchema {
 
     @MainActor
     private static func makeUITestContainerThrowing() throws -> ModelContainer {
-        do {
-            return try openMemoryStoreThrowing(logLabel: "uitest-app")
-        } catch {
-            logger.warning("UI-test in-memory store failed: \(error.localizedDescription)")
-        }
-
-        let url = ephemeralStoreURL(label: "uitest-app")
+        let url = uiTestStoreURL
         for types in [coreModels, [Project.self, Landmark.self, BIMElement.self, SiteObservation.self]] {
             do {
                 return try openDiskStore(at: url, types: types)
@@ -49,7 +43,7 @@ enum ArchFusionSchema {
             }
         }
 
-        throw ModelContainerBootstrapError.unavailable("uitest-app")
+        return try openMemoryStoreThrowing(logLabel: "uitest-app-fallback")
     }
 
     static let coreModels: [any PersistentModel.Type] = [
@@ -61,7 +55,10 @@ enum ArchFusionSchema {
         AssetRecord.self,
         ExportPackage.self,
         AIInteraction.self,
-        SiteObservation.self
+        SiteObservation.self,
+        MaterialRecord.self,
+        MaterialTestRecord.self,
+        FabricationModuleRecord.self
     ]
 
     static let models: [any PersistentModel.Type] = coreModels
@@ -250,6 +247,12 @@ enum ArchFusionSchema {
         let directory = isolatedStoreDirectory()
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory.appending(path: "ArchFusion_\(label)_\(UUID().uuidString).store")
+    }
+
+    private static var uiTestStoreURL: URL {
+        let directory = isolatedStoreDirectory()
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appending(path: "ArchFusion_uitest-app.store")
     }
 
     private static func openMemoryStoreThrowing(

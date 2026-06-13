@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: wcs_bim
+      POSTGRES_USER: wcs_bim
+      POSTGRES_PASSWORD: local-development-only
+    volumes:
+      - ./docs/ai-bim-supabase-schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "5432:5432"
+
+  ml-service:
+    build: ./ml-service
+    environment:
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      TRAINING_DATA_CSV: ${TRAINING_DATA_CSV:-data/materials_training.csv}
+      TRAINING_OUTPUT_DIR: ${TRAINING_OUTPUT_DIR:-artifacts}
+      RETRAIN_TIMEOUT_SECONDS: ${RETRAIN_TIMEOUT_SECONDS:-7200}
+    ports:
+      - "8000:8000"
+
+  api:
+    build: ./backend
+    depends_on:
+      - postgres
+      - ml-service
+    environment:
+      DATABASE_URL: postgres://wcs_bim:local-development-only@postgres:5432/wcs_bim
+      ML_SERVICE_URL: http://ml-service:8000
+      JWT_SECRET: ${JWT_SECRET:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-20971520}
+      PYTHON_PATH: ${PYTHON_PATH:-python3}
+      OPTIMIZER_TIMEOUT_MS: ${OPTIMIZER_TIMEOUT_MS:-15000}
+      RETRAIN_INTERVAL_MS: ${RETRAIN_INTERVAL_MS:-0}
+    ports:
+      - "3000:3000"

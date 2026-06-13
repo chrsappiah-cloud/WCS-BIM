@@ -71,11 +71,14 @@ struct SiteCaptureSection: View {
 
                 Section("Photos & observations") {
                     TextField("Observation title", text: $observationTitle)
-                    PrimaryButton("Live camera (AVFoundation)", layout: .compact) {
+                    PrimaryButton(
+                        "Live camera (AVFoundation)",
+                        layout: .compact,
+                        accessibilityIdentifier: "site.capture.camera"
+                    ) {
                         fieldHub.activateFieldSensors()
                         showCamera = true
                     }
-                    .accessibilityIdentifier("site.capture.camera")
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
                         Label("Import from library", systemImage: "photo.on.rectangle")
                     }
@@ -99,6 +102,8 @@ struct SiteCaptureSection: View {
                 }
             }
         }
+        .navigationTitle("Full Site Capture")
+        .accessibilityIdentifier("site.capture.form")
         .onAppear {
             locationService.requestPermission()
             siteContextService.syncProjectFields(from: project)

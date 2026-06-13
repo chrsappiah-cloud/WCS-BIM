@@ -7,6 +7,7 @@ final class SubscriptionAccessController {
     private(set) var activeTier: SubscriptionTier = .free
     private(set) var adminOverrideTier: SubscriptionTier?
     private(set) var registryEntries: [SubscriptionAccessEntry] = []
+    private(set) var isAdminUnlocked: Bool
 
     private let defaults = UserDefaults.standard
     private var storeKitTier: SubscriptionTier = .free
@@ -18,6 +19,7 @@ final class SubscriptionAccessController {
     }
 
     init() {
+        isAdminUnlocked = defaults.bool(forKey: Keys.adminUnlocked)
         reloadOverrides()
         loadBundledRegistry()
         recomputeTier()
@@ -74,20 +76,18 @@ final class SubscriptionAccessController {
         registryEntries = registry.entries
     }
 
-    var isAdminUnlocked: Bool {
-        defaults.bool(forKey: Keys.adminUnlocked)
-    }
-
     func unlockAdmin(pin: String) -> Bool {
         let expected = ProcessInfo.processInfo.environment["WCS_ADMIN_PIN"]
             ?? defaults.string(forKey: "wcs.admin.pin")
             ?? "wcs-admin"
         guard pin == expected else { return false }
+        isAdminUnlocked = true
         defaults.set(true, forKey: Keys.adminUnlocked)
         return true
     }
 
     func lockAdmin() {
+        isAdminUnlocked = false
         defaults.set(false, forKey: Keys.adminUnlocked)
     }
 

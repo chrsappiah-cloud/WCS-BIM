@@ -25,6 +25,18 @@ final class DesignSystemTokenTests: XCTestCase {
         _ = WCSLuxePalette.gold
     }
 
+    func testBIMRouteTabsMatchShell() {
+        XCTAssertEqual(WCSRouteTab.bimWorkflow.count, 5)
+        XCTAssertEqual(WCSRouteTab.bimWorkflow.first?.accessibilityIdentifier, "tab.projects")
+        XCTAssertTrue(WCSRouteTab.bimWorkflow.contains { $0.id == "more" })
+    }
+
+    func testLearningRouteTabsAll() {
+        XCTAssertEqual(WCSRouteTab.all.count, 5)
+        XCTAssertEqual(WCSRouteTab.all[0].title, "Home")
+        XCTAssertEqual(WCSRouteTab.learningShell.count, WCSRouteTab.all.count)
+    }
+
     func testInspectorParamIdentity() {
         let param = InspectorParam(key: "Width", value: "200")
         XCTAssertEqual(param.id, "Width")
