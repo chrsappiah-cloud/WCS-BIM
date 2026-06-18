@@ -33,9 +33,19 @@ struct UserSubscriptionPanelView: View {
             }
 
             Section("Plans") {
+                if manager.products.isEmpty && manager.isLoading && !manager.didAttemptProductLoad {
+                    HStack {
+                        ProgressView()
+                        Text("Loading App Store products…")
+                            .font(WCSFont.caption())
+                    }
+                }
+
                 if manager.products.isEmpty {
-                    Text("Loading App Store products…")
-                        .font(WCSFont.caption())
+                    ForEach(SubscriptionPlanCatalog.reviewSafePlans) { plan in
+                        fallbackPlanRow(plan)
+                    }
+
                     PrimaryButton("Load plans") {
                         Task { await manager.loadProducts() }
                     }
@@ -76,5 +86,31 @@ struct UserSubscriptionPanelView: View {
         .navigationTitle("Subscription")
         .accessibilityIdentifier("subscription.screen")
         .task { await manager.loadProducts() }
+    }
+
+    private func fallbackPlanRow(_ plan: SubscriptionPlanSummary) -> some View {
+        VStack(alignment: .leading, spacing: WCSSpacing.xs) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(plan.displayName)
+                    .font(WCSFont.title(16))
+                Spacer()
+                StatusChip(text: plan.fallbackPrice, tone: .inProgress)
+            }
+            Text(plan.description)
+                .font(WCSFont.caption())
+                .foregroundStyle(WCSColor.neutralText.opacity(0.72))
+            VStack(alignment: .leading, spacing: WCSSpacing.xxs) {
+                ForEach(plan.includedFeatures, id: \.self) { feature in
+                    Label(feature, systemImage: "checkmark.seal.fill")
+                        .font(WCSFont.caption())
+                        .foregroundStyle(WCSColor.neutralText.opacity(0.78))
+                }
+            }
+            Text("Purchasing becomes available when App Store products finish loading.")
+                .font(WCSFont.caption())
+                .foregroundStyle(WCSColor.neutralText.opacity(0.62))
+        }
+        .padding(.vertical, WCSSpacing.xxs)
+        .accessibilityIdentifier("subscription.plan.\(plan.id)")
     }
 }

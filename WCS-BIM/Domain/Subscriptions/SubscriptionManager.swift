@@ -7,6 +7,7 @@ final class SubscriptionManager {
     private(set) var products: [Product] = []
     private(set) var purchaseMessage = ""
     private(set) var isLoading = false
+    private(set) var didAttemptProductLoad = false
 
     let access: SubscriptionAccessController
 
@@ -16,12 +17,19 @@ final class SubscriptionManager {
 
     func loadProducts() async {
         isLoading = true
+        didAttemptProductLoad = true
         defer { isLoading = false }
         do {
             products = try await Product.products(for: SubscriptionProductIDs.all)
                 .sorted { $0.price < $1.price }
+            if products.isEmpty {
+                purchaseMessage = "Plans are shown below. App Store purchase options are temporarily unavailable; tap Load plans to retry."
+            } else {
+                purchaseMessage = ""
+            }
         } catch {
-            purchaseMessage = "Could not load products: \(error.localizedDescription)"
+            products = []
+            purchaseMessage = "Plans are shown below. App Store purchase options could not load: \(error.localizedDescription)"
         }
         await refreshEntitlements()
     }
