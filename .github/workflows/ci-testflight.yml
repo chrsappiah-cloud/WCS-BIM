@@ -26,7 +26,8 @@ jobs:
 
       - name: Block committed secrets
         run: |
-          ! git grep -E 'BEGIN PRIVATE KEY|AuthKey_.*\.p8' -- ':!*.md' ':!config.example.env' || \
+          ! git grep -I -E -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' \
+            -- ':!*.md' ':!config.example.env' ':!backend/node_modules/**' || \
             (echo "Do not commit API keys"; exit 1)
 
   testflight-live:

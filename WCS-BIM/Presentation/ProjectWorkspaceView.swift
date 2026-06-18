@@ -8,7 +8,7 @@ struct ProjectWorkspaceView: View {
     @State private var selectedTab: ProjectTab = .overview
 
     enum ProjectTab: String, CaseIterable, Identifiable {
-        case overview, site, design, massing, ar, ai, export, fm
+        case overview, site, design, massing, ar, ai, aiBIM, export, fm
 
         var id: String { rawValue }
 
@@ -20,6 +20,7 @@ struct ProjectWorkspaceView: View {
             case .massing: "Massing"
             case .ar: "AR"
             case .ai: "AI"
+            case .aiBIM: "AI BIM"
             case .export: "Export"
             case .fm: "FM"
             }
@@ -33,6 +34,7 @@ struct ProjectWorkspaceView: View {
             case .massing: "square.stack.3d.down.right"
             case .ar: "arkit"
             case .ai: "sparkles"
+            case .aiBIM: "shippingbox.and.arrow.backward"
             case .export: "square.and.arrow.up"
             case .fm: "wrench.and.screwdriver"
             }
@@ -63,6 +65,8 @@ struct ProjectWorkspaceView: View {
                     ARSiteSection(project: project, viewModel: viewModel)
                 case .ai:
                     AIAssistantView(project: project)
+                case .aiBIM:
+                    AIBIMLabView(project: project)
                 case .export:
                     ExportCenterView(project: project)
                 case .fm:
@@ -115,9 +119,24 @@ struct ProjectOverviewSection: View {
                 TextField("Climate", text: $project.climate)
                 TextField("Program summary", text: $project.programSummary, axis: .vertical)
                 TextField("Constraints", text: $project.constraintsText, axis: .vertical)
+                if !project.siteAddress.isEmpty {
+                    LabeledContent("Address") {
+                        Text(project.siteAddress).font(.caption)
+                    }
+                }
                 LabeledContent("Coordinates") {
                     Text(String(format: "%.5f, %.5f", project.siteLatitude, project.siteLongitude))
                         .font(.caption.monospaced())
+                }
+                if project.estimatedSiteValue > 0 {
+                    LabeledContent("Indicative valuation") {
+                        Text(
+                            project.estimatedSiteValue,
+                            format: .currency(code: project.valuationCurrency).precision(.fractionLength(0))
+                        )
+                        .font(.subheadline.weight(.semibold))
+                    }
+                    .accessibilityIdentifier("project.overview.valuation")
                 }
             }
             Section("Notes") {
@@ -129,6 +148,9 @@ struct ProjectOverviewSection: View {
                 LabeledContent("Issues", value: "\(project.issues.count)")
                 LabeledContent("Assets", value: "\(project.assets.count)")
                 LabeledContent("AI interactions", value: "\(project.aiInteractions.count)")
+                LabeledContent("Materials", value: "\(project.materials.count)")
+                LabeledContent("Material tests", value: "\(project.materialTests.count)")
+                LabeledContent("Fabrication modules", value: "\(project.fabricationModules.count)")
             }
         }
     }

@@ -9,17 +9,20 @@ public struct PrimaryButton: View {
     private let title: String
     private let layout: Layout
     private let isEnabled: Bool
+    private let accessibilityID: String
     private let action: () -> Void
 
     public init(
         _ title: String,
         layout: Layout = .fullWidth,
         isEnabled: Bool = true,
+        accessibilityIdentifier: String? = nil,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.layout = layout
         self.isEnabled = isEnabled
+        self.accessibilityID = accessibilityIdentifier ?? "PrimaryButton_\(title)"
         self.action = action
     }
 
@@ -33,13 +36,14 @@ public struct PrimaryButton: View {
                 .padding(.horizontal, layout == .compact ? 14 : 16)
                 .frame(maxWidth: layout == .fullWidth ? .infinity : nil)
         }
+        .contentShape(Rectangle())
         .buttonStyle(.plain)
         .background(
             RoundedRectangle(cornerRadius: WCSSpacing.cornerRadius, style: .continuous)
                 .fill(isEnabled ? WCSColor.primary : WCSColor.neutral4)
         )
         .disabled(!isEnabled)
-        .accessibilityIdentifier("PrimaryButton_\(title)")
+        .accessibilityIdentifier(accessibilityID)
         .accessibilityLabel(title)
     }
 }

@@ -20,7 +20,10 @@ final class AllUIUnitsUITests: WCS_BIMUITestCase {
 
         // Site
         selectTab("Site", in: app)
-        XCTAssertTrue(app.navigationBars["Site Capture"].waitForExistence(timeout: 10))
+        XCTAssertTrue(
+            app.otherElements["site.capture.screen"].waitForExistence(timeout: 10)
+                || app.navigationBars["Site Capture"].waitForExistence(timeout: 5)
+        )
 
         // AR (project from create step)
         selectTab("AR", in: app)
@@ -41,6 +44,9 @@ final class AllUIUnitsUITests: WCS_BIMUITestCase {
 
         // Export
         selectTab("Export", in: app)
+        for _ in 0..<4 where !app.buttons["export.ifc"].exists {
+            app.swipeUp()
+        }
         XCTAssertTrue(app.buttons["export.ifc"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["export.cobie"].exists)
         XCTAssertTrue(app.buttons["export.pdf"].exists)

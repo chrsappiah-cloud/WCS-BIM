@@ -85,6 +85,7 @@ struct ProjectListView: View {
             siteLongitude: lon
         )
         modelContext.insert(project)
+        try? modelContext.save()
         workspace?.select(project)
         newName = ""
 
@@ -105,5 +106,6 @@ struct ProjectListView: View {
         for index in offsets {
             modelContext.delete(projects[index])
         }
+        try? modelContext.save()
     }
 }

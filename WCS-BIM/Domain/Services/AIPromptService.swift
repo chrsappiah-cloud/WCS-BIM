@@ -30,7 +30,7 @@ final class AIPromptService {
                     landmarks: project.landmarks.map(\.title),
                     program: project.programSummary.isEmpty ? project.notes : project.programSummary
                 )
-            case .commercialPlanning, .fmHandover:
+            case .commercialPlanning, .fmHandover, .mixOptimizer, .qcReport, .designCopilot, .fabricationPlanner:
                 let prompt: String
                 switch type {
                 case .commercialPlanning:
@@ -43,6 +43,14 @@ final class AIPromptService {
                 case .fmHandover:
                     let summary = project.elements.map { "\($0.name) | \($0.elementType) | \($0.guid)" }.joined(separator: "\n")
                     prompt = AIPromptTemplates.fmHandover(bimSummary: summary)
+                case .mixOptimizer:
+                    prompt = AIPromptTemplates.mixOptimizer(payload: project.constraintsText)
+                case .qcReport:
+                    prompt = AIPromptTemplates.qcReport(project: project)
+                case .designCopilot:
+                    prompt = AIPromptTemplates.designCopilot(project: project)
+                case .fabricationPlanner:
+                    prompt = AIPromptTemplates.fabricationPlanner(project: project)
                 default:
                     prompt = ""
                 }

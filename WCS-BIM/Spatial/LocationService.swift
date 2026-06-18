@@ -6,9 +6,16 @@ import SwiftUI
 @MainActor
 @Observable
 final class LocationService: NSObject, CLLocationManagerDelegate {
+    enum TrackingMode {
+        case standard
+        case liveLocator
+    }
+
     var authorizationStatus: CLAuthorizationStatus = .notDetermined
     var currentLocation: CLLocation?
     var lastError: String?
+    var trackingMode: TrackingMode = .standard
+    var isUpdatingLocation = false
     var mapRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: -32.9283, longitude: 151.7817),
         span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
@@ -36,11 +43,45 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
 
     func startUpdates() {
         guard !UITestConfiguration.isEnabled else { return }
+        applyTrackingConfiguration()
         manager.startUpdatingLocation()
+        isUpdatingLocation = true
     }
 
     func stopUpdates() {
         manager.stopUpdatingLocation()
+        isUpdatingLocation = false
+    }
+
+    func enableLiveLocatorMode() {
+        trackingMode = .liveLocator
+        applyTrackingConfiguration()
+        if isUpdatingLocation {
+            manager.stopUpdatingLocation()
+            manager.startUpdatingLocation()
+        } else {
+            startUpdates()
+        }
+    }
+
+    func enableStandardMode() {
+        trackingMode = .standard
+        applyTrackingConfiguration()
+    }
+
+    private func applyTrackingConfiguration() {
+        switch trackingMode {
+        case .standard:
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+            manager.distanceFilter = kCLDistanceFilterNone
+        case .liveLocator:
+            manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+            manager.distanceFilter = 5
+            manager.pausesLocationUpdatesAutomatically = false
+            if #available(iOS 17.0, *) {
+                manager.showsBackgroundLocationIndicator = false
+            }
+        }
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

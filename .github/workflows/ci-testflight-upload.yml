@@ -23,10 +23,15 @@ jobs:
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
 
-      - name: Bump build number (tag / manual)
-        if: github.event_name == 'workflow_dispatch' && inputs.build_number != ''
+      - name: Set build number
         run: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ inputs.build_number }}" WCS-BIM/Info.plist
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.build_number }}" ]; then
+            BUILD_NUMBER="${{ inputs.build_number }}"
+          else
+            BUILD_NUMBER="$(date -u +%Y%m%d%H%M)"
+          fi
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" WCS-BIM/Info.plist
+          echo "Using build number ${BUILD_NUMBER}"
 
       - name: Validate integrations
         run: bash scripts/api/validate-integrations.sh
@@ -61,11 +66,12 @@ jobs:
         env:
           ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
         run: |
-          echo "$ASC_PRIVATE_KEY" > /tmp/AuthKey.p8
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          echo "$ASC_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8"
           cat >> "$GITHUB_ENV" <<EOF
           ASC_KEY_ID=${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID=${{ secrets.ASC_ISSUER_ID }}
-          ASC_PRIVATE_KEY_PATH=/tmp/AuthKey.p8
+          ASC_PRIVATE_KEY_PATH=$HOME/.appstoreconnect/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
           ASC_APP_ID=${{ secrets.ASC_APP_ID }}
           EOF
 

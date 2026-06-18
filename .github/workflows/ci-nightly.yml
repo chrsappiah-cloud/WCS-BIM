@@ -43,6 +43,16 @@ jobs:
             -only-testing:WCS-BIMUITests/Tier3ScreenUITests \
             test
 
+      - name: Tier 4 features + UI matrix
+        run: |
+          xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -only-testing:WCS-BIMUITests/Tier4FeaturesUITests \
+            -only-testing:WCS-BIMUITests/UIFunctionMatrixUITests \
+            -only-testing:WCS-BIMUITests/DesignSystemUITests \
+            -only-testing:WCS-BIMUITests/AllUIUnitsUITests \
+            test
+
       - name: Upload UI test results
         if: always()
         uses: actions/upload-artifact@v4

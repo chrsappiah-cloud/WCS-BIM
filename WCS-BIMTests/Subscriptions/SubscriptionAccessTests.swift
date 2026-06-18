@@ -36,4 +36,36 @@ final class SubscriptionAccessTests: XCTestCase {
         controller.setAdminOverride(.team)
         XCTAssertTrue(controller.hasFeature(.cloudKitSync))
     }
+    func testLoadProductsShowsFallbackWhenStoreKitReturnsNoProducts() async {
+        let manager = SubscriptionManager(access: SubscriptionAccessController()) {
+            []
+        }
+
+        await manager.loadProducts()
+
+        XCTAssertTrue(manager.didAttemptProductLoad)
+        XCTAssertFalse(manager.isLoading)
+        XCTAssertTrue(manager.products.isEmpty)
+        XCTAssertTrue(manager.purchaseMessage.contains("Plans are shown below"))
+        XCTAssertTrue(manager.purchaseMessage.contains("plan details remain visible"))
+    }
+
+    func testLoadProductsShowsFallbackWhenStoreKitFails() async {
+        struct StoreKitUnavailable: LocalizedError {
+            var errorDescription: String? { "StoreKit unavailable in review environment" }
+        }
+
+        let manager = SubscriptionManager(access: SubscriptionAccessController()) {
+            throw StoreKitUnavailable()
+        }
+
+        await manager.loadProducts()
+
+        XCTAssertTrue(manager.didAttemptProductLoad)
+        XCTAssertFalse(manager.isLoading)
+        XCTAssertTrue(manager.products.isEmpty)
+        XCTAssertTrue(manager.purchaseMessage.contains("Plans are shown below"))
+        XCTAssertTrue(manager.purchaseMessage.contains("StoreKit unavailable"))
+    }
+
 }

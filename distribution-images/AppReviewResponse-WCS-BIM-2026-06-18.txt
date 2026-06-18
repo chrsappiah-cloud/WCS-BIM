@@ -1,0 +1,11 @@
+Hello Apple Review Team,
+
+Thank you for the review notes. We have addressed the issues for WCS-Bim version 1.0.
+
+For Guideline 2.3.3, we replaced the previous promotional screenshots with screenshots captured from the actual app running on supported iPhone and iPad devices. The updated screenshots show the Projects workflow, Site Capture, Export Center, and app workflow navigation in use for both the 6.7-inch iPhone and 13-inch iPad display requirements.
+
+For Guideline 2.1(a), we corrected the Plans page so it fully populates even when App Store product loading is delayed or temporarily unavailable. The page now displays the available plan summaries with feature details and keeps the App Store purchase loading/retry flow available.
+
+We uploaded corrected build 1.0 (4), attached it to the App Store version, updated the required metadata and screenshots for the active English localizations, and resubmitted the app for review.
+
+Thank you.

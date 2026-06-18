@@ -1,0 +1,7 @@
+app_identifier("wcs.WCS-BIM")
+platform("ios")
+screenshots_path("./fastlane/screenshots")
+skip_binary_upload(true)
+skip_metadata(true)
+skip_app_version_update(true)
+force(true)

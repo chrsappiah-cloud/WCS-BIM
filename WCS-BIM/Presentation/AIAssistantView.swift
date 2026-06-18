@@ -23,59 +23,57 @@ struct AIAssistantView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 12) {
-                if projects.isEmpty {
-                    Text("Create a project first to save AI interactions.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else if fixedProject == nil, projects.count > 1 {
-                    Picker("Project", selection: $selectedProjectID) {
-                        ForEach(projects, id: \.id) { p in
-                            Text(p.name).tag(Optional(p.id))
-                        }
+        VStack(spacing: 12) {
+            if projects.isEmpty {
+                Text("Create a project first to save AI interactions.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if fixedProject == nil, projects.count > 1 {
+                Picker("Project", selection: $selectedProjectID) {
+                    ForEach(projects, id: \.id) { p in
+                        Text(p.name).tag(Optional(p.id))
                     }
                 }
-
-                TextField(
-                    "Ask for massing, zoning, circulation, sustainability...",
-                    text: $prompt,
-                    axis: .vertical
-                )
-                .font(WCSFont.body())
-                .textFieldStyle(.roundedBorder)
-                .accessibilityIdentifier("ai.promptField")
-                .accessibilityLabel("AI prompt")
-
-                PrimaryButton(
-                    "Generate",
-                    isEnabled: !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !aiService.isLoading
-                ) {
-                    Task { await generate() }
-                }
-                .accessibilityIdentifier("ai.generateButton")
-
-                if aiService.isLoading { ProgressView() }
-
-                ScrollView {
-                    Text(response)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .textSelection(.enabled)
-                }
-
-                Spacer()
             }
-            .padding()
-            .navigationTitle("AI Assistant")
-            .onAppear {
-                migrateLegacyAPIKey()
-                syncAPIKey()
-                if selectedProjectID == nil {
-                    selectedProjectID = fixedProject?.id ?? projects.first?.id
-                }
+
+            TextField(
+                "Ask for massing, zoning, circulation, sustainability...",
+                text: $prompt
+            )
+            .font(WCSFont.body())
+            .textFieldStyle(.roundedBorder)
+            .submitLabel(.return)
+            .accessibilityIdentifier("ai.promptField")
+            .accessibilityLabel("AI prompt")
+
+            PrimaryButton(
+                "Generate",
+                isEnabled: !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !aiService.isLoading
+            ) {
+                Task { await generate() }
             }
-            .onChange(of: apiKey) { _, _ in syncAPIKey() }
+            .accessibilityIdentifier("ai.generateButton")
+
+            if aiService.isLoading { ProgressView() }
+
+            ScrollView {
+                Text(response)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+
+            Spacer()
         }
+        .padding()
+        .navigationTitle("AI Assistant")
+        .onAppear {
+            migrateLegacyAPIKey()
+            syncAPIKey()
+            if selectedProjectID == nil {
+                selectedProjectID = fixedProject?.id ?? projects.first?.id
+            }
+        }
+        .onChange(of: apiKey) { _, _ in syncAPIKey() }
     }
 
     private func migrateLegacyAPIKey() {

@@ -26,20 +26,25 @@ struct SiteCaptureSection: View {
                     latitude: project.siteLatitude,
                     longitude: project.siteLongitude
                 ),
+                userLocation: locationService.currentLocation,
+                identifiedPropertyCoordinate: nil,
                 cameraPosition: $viewModel.mapCameraPosition
             )
-            .frame(height: 240)
+            .frame(height: 260)
 
             Form {
-                Section("Geo-reference") {
-                    Button("Use Current GPS", systemImage: "location.fill") {
-                        applyCurrentLocation()
-                    }
-                    LabeledContent("Coordinates") {
-                        Text(String(format: "%.5f, %.5f", project.siteLatitude, project.siteLongitude))
-                            .font(.caption.monospaced())
-                    }
+                Section("Quick capture") {
+                    cameraCaptureButton
+                    Text("Capture a field photo before adding detailed site context.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
+
+                SiteLocationPickerView(
+                    project: project,
+                    locationService: locationService,
+                    onLocationApplied: { viewModel.configureMap(for: project) }
+                )
 
                 SiteContextFields(project: project)
 
@@ -71,11 +76,7 @@ struct SiteCaptureSection: View {
 
                 Section("Photos & observations") {
                     TextField("Observation title", text: $observationTitle)
-                    PrimaryButton("Live camera (AVFoundation)", layout: .compact) {
-                        fieldHub.activateFieldSensors()
-                        showCamera = true
-                    }
-                    .accessibilityIdentifier("site.capture.camera")
+                    cameraCaptureButton
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
                         Label("Import from library", systemImage: "photo.on.rectangle")
                     }
@@ -99,8 +100,11 @@ struct SiteCaptureSection: View {
                 }
             }
         }
+        .navigationTitle("Full Site Capture")
+        .accessibilityIdentifier("site.capture.form")
         .onAppear {
             locationService.requestPermission()
+            locationService.startUpdates()
             siteContextService.syncProjectFields(from: project)
             fieldHub.activateFieldSensors()
         }
@@ -127,14 +131,14 @@ struct SiteCaptureSection: View {
         }
     }
 
-    private func applyCurrentLocation() {
-        if let loc = locationService.currentLocation {
-            project.siteLatitude = loc.coordinate.latitude
-            project.siteLongitude = loc.coordinate.longitude
-            viewModel.configureMap(for: project)
-        } else {
-            locationService.requestPermission()
-            locationService.startUpdates()
+    private var cameraCaptureButton: some View {
+        PrimaryButton(
+            "Live camera (AVFoundation)",
+            layout: .compact,
+            accessibilityIdentifier: "site.capture.camera"
+        ) {
+            fieldHub.activateFieldSensors()
+            showCamera = true
         }
     }
 

@@ -11,6 +11,8 @@ struct SettingsView: View {
     @AppStorage("cloudKitEnabled") private var cloudKitEnabled = true
     @AppStorage("designStyle") private var designStyle = "Contemporary"
     @AppStorage("defaultProgram") private var defaultProgram = "Commercial building"
+    @AppStorage("bimAPIBaseURL") private var bimAPIBaseURL = "http://127.0.0.1:3000"
+    @AppStorage("bimAPIBearerToken") private var bimAPIBearerToken = ""
     @Environment(\.modelContext) private var modelContext
     @State private var installMessage: String?
 
@@ -41,6 +43,14 @@ struct SettingsView: View {
                     WCSLuxeHomeView()
                 }
                 .accessibilityIdentifier("settings.luxeDashboard")
+                NavigationLink("Navigation components") {
+                    WCSNavigationShowcaseView()
+                }
+                .accessibilityIdentifier("settings.navigationShowcase")
+                NavigationLink("Learning tab shell (5 tabs)") {
+                    WCSLearningShellView()
+                }
+                .accessibilityIdentifier("settings.learningShell")
             }
             Section("Design pack") {
                 Button("Install all design programs") {
@@ -68,6 +78,10 @@ struct SettingsView: View {
             Section("AI & APIs") {
                 SecureField("OpenAI API Key", text: $openAIApiKey)
                 SecureField("Hugging Face API Key", text: $huggingFaceApiKey)
+                TextField("BIM API base URL", text: $bimAPIBaseURL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                SecureField("BIM API bearer token", text: $bimAPIBearerToken)
                 Picker("Preferred AI provider", selection: $preferredAIProvider) {
                     Text("OpenAI").tag("openai.chat")
                     Text("Hugging Face").tag("huggingface.inference")
@@ -108,47 +122,76 @@ struct AppShellView: View {
     @State private var subscriptionAccess: SubscriptionAccessController
     @State private var subscriptionManager: SubscriptionManager
     @State private var fieldSystemsHub: APIIntegrationHub
+    @State private var selectedTab = 0
 
     init() {
         let access = SubscriptionAccessController()
         _subscriptionAccess = State(wrappedValue: access)
         _subscriptionManager = State(wrappedValue: SubscriptionManager(access: access))
         _fieldSystemsHub = State(wrappedValue: APIIntegrationHub())
+        if ProcessInfo.processInfo.environment["UITESTING"] == "1",
+           let requestedTab = ProcessInfo.processInfo.environment["UITEST_TAB_ID"],
+           let index = WCSRouteTab.bimWorkflow.firstIndex(where: { $0.id == requestedTab }) {
+            _selectedTab = State(wrappedValue: index)
+        }
     }
 
     var body: some View {
-        TabView {
-            // Six workflows; Export & Settings appear under More on compact widths.
+        WCSTabShell(selection: $selectedTab, tabs: WCSRouteTab.bimWorkflow) { tab, _ in
+            tabRoot(for: tab)
+        }
+        .tint(WCSColor.primary)
+    }
+
+    @ViewBuilder
+    private func tabRoot(for tab: WCSRouteTab) -> some View {
+        switch tab.id {
+        case "projects":
             NavigationStack { ProjectListView(workspace: workspace) }
-                .tabItem { Label("Projects", systemImage: "building.2") }
-                .accessibilityIdentifier("tab.projects")
-
+        case "site":
             NavigationStack { SiteCaptureView() }
-                .tabItem { Label("Site", systemImage: "map") }
-                .accessibilityIdentifier("tab.site")
-
+        case "ar":
             NavigationStack { ARTabView() }
-                .tabItem { Label("AR", systemImage: "viewfinder") }
-                .accessibilityIdentifier("tab.ar")
-
-            NavigationStack { AIAssistantView() }
-                .tabItem { Label("AI", systemImage: "sparkles") }
-                .accessibilityIdentifier("tab.ai")
-
+        case "export":
             NavigationStack { ExportCenterView() }
-                .tabItem { Label("Export", systemImage: "square.and.arrow.up") }
-                .accessibilityIdentifier("tab.export")
-
+        case "more":
             NavigationStack {
-                SettingsView(
+                MoreToolsView(
                     subscriptionManager: subscriptionManager,
                     fieldSystemsHub: fieldSystemsHub
                 )
             }
-                .tabItem { Label("Settings", systemImage: "gearshape") }
-                .accessibilityIdentifier("tab.settings")
+        default:
+            EmptyView()
         }
-        .tint(WCSColor.primary)
+    }
+}
+
+struct MoreToolsView: View {
+    var subscriptionManager: SubscriptionManager
+    var fieldSystemsHub: APIIntegrationHub
+
+    var body: some View {
+        List {
+            NavigationLink {
+                AIAssistantView()
+            } label: {
+                Label("AI", systemImage: "sparkles")
+            }
+            .accessibilityIdentifier("more.ai")
+
+            NavigationLink {
+                SettingsView(
+                    subscriptionManager: subscriptionManager,
+                    fieldSystemsHub: fieldSystemsHub
+                )
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+            .accessibilityIdentifier("more.settings")
+        }
+        .navigationTitle("More")
+        .accessibilityIdentifier("more.screen")
     }
 }
 
