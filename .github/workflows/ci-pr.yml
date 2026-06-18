@@ -47,8 +47,12 @@ jobs:
       - name: Validate API integrations
         run: bash scripts/api/validate-integrations.sh
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install TestFlight admin dependencies
-        run: pip3 install -r scripts/testflight/requirements.txt
+        run: pip install -r scripts/testflight/requirements.txt
 
       - name: Validate TestFlight admin scripts
         run: bash scripts/testflight/enforce_ci_check.sh
