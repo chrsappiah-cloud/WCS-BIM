@@ -296,7 +296,6 @@ enum ArchFusionSchema {
         types: [any PersistentModel.Type]
     ) throws -> ModelContainer {
         ensureParentDirectory(for: url)
-        removeStoreFiles(at: url)
         let schema = Schema(types)
         let configuration = localConfiguration(schema: schema, url: url)
         return try ModelContainer(for: schema, configurations: configuration)

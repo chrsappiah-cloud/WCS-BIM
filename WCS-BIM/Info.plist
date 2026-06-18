@@ -11,7 +11,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>ArchFusion BIM uses the camera for AR site capture and design-in-place workflows.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ArchFusion BIM records site coordinates to geo-reference landmarks and BIM exports.</string>
+	<string>ArchFusion BIM uses your real-time location to identify nearby properties and run indicative site valuations.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>ArchFusion BIM saves site photos and export sheets to your library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

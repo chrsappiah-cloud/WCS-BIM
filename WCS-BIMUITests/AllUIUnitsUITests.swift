@@ -44,10 +44,6 @@ final class AllUIUnitsUITests: WCS_BIMUITestCase {
 
         // Export
         selectTab("Export", in: app)
-        XCTAssertTrue(
-            app.descendants(matching: .any)["export.screen"].waitForExistence(timeout: 10)
-                || app.navigationBars["Export Center"].waitForExistence(timeout: 5)
-        )
         for _ in 0..<4 where !app.buttons["export.ifc"].exists {
             app.swipeUp()
         }

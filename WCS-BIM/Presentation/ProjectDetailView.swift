@@ -4,6 +4,7 @@ import SwiftUI
 struct ProjectDetailView: View {
     @Bindable var project: Project
     @Environment(\.modelContext) private var modelContext
+    @State private var locationService = LocationService()
     @State private var landmarkTitle = ""
     @State private var landmarkLat = 0.0
     @State private var landmarkLon = 0.0
@@ -39,9 +40,12 @@ struct ProjectDetailView: View {
             Section("Site") {
                 TextField("Name", text: $project.name)
                 TextField("Notes", text: $project.notes, axis: .vertical)
-                TextField("Latitude", value: $project.siteLatitude, format: .number)
-                TextField("Longitude", value: $project.siteLongitude, format: .number)
             }
+
+            SiteLocationPickerView(
+                project: project,
+                locationService: locationService
+            )
 
             Section("Landmarks") {
                 TextField("Title", text: $landmarkTitle)
@@ -66,6 +70,10 @@ struct ProjectDetailView: View {
             }
         }
         .navigationTitle(project.name)
+        .onAppear {
+            locationService.requestPermission()
+            locationService.startUpdates()
+        }
         .sheet(isPresented: $showInspector) {
             InspectorSheet(isPresented: $showInspector, title: "Inspector", params: $inspectorParams) { saved in
                 applyInspector(saved)

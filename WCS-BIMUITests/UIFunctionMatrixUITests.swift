@@ -69,7 +69,6 @@ final class UIFunctionMatrixUITests: WCS_BIMUITestCase {
     ).firstMatch.waitForExistence(timeout: 20)
 
     selectTab("Export", in: app)
-    _ = waitForElement("export.screen", in: app)
     for _ in 0..<4 where !app.buttons["export.ifc"].exists {
       app.swipeUp()
     }

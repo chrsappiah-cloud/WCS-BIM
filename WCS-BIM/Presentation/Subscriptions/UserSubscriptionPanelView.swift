@@ -33,10 +33,10 @@ struct UserSubscriptionPanelView: View {
             }
 
             Section("Plans") {
-                if manager.products.isEmpty && manager.isLoading && !manager.didAttemptProductLoad {
+                if manager.products.isEmpty && manager.isLoading {
                     HStack {
                         ProgressView()
-                        Text("Loading App Store products…")
+                        Text("Loading App Store products...")
                             .font(WCSFont.caption())
                     }
                 }
@@ -46,7 +46,7 @@ struct UserSubscriptionPanelView: View {
                         fallbackPlanRow(plan)
                     }
 
-                    PrimaryButton("Load plans") {
+                    PrimaryButton(manager.isLoading ? "Loading plans" : "Load plans", isEnabled: !manager.isLoading) {
                         Task { await manager.loadProducts() }
                     }
                     .accessibilityIdentifier("subscription.loadProducts")
@@ -106,7 +106,7 @@ struct UserSubscriptionPanelView: View {
                         .foregroundStyle(WCSColor.neutralText.opacity(0.78))
                 }
             }
-            Text("Purchasing becomes available when App Store products finish loading.")
+            Text("Plan details remain available even when App Store products are temporarily unavailable.")
                 .font(WCSFont.caption())
                 .foregroundStyle(WCSColor.neutralText.opacity(0.62))
         }

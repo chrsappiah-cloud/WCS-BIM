@@ -16,8 +16,14 @@ final class Tier2RegressionUITests: WCS_BIMUITestCase {
         app.buttons["settings.installPrograms"].tap()
         XCTAssertTrue(app.staticTexts["settings.installMessage"].waitForExistence(timeout: 10))
         selectTab("Projects", in: app)
-        XCTAssertTrue(app.staticTexts["Commercial Hub"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Airport Terminal A"].exists)
+        for _ in 0..<30 where !projectRow(named: "Commercial Hub", in: app).exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(projectRow(named: "Commercial Hub", in: app).exists)
+        for _ in 0..<30 where !projectRow(named: "Airport Terminal A", in: app).exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(projectRow(named: "Airport Terminal A", in: app).exists)
     }
 
     @MainActor

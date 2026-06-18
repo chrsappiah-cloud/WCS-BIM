@@ -119,9 +119,24 @@ struct ProjectOverviewSection: View {
                 TextField("Climate", text: $project.climate)
                 TextField("Program summary", text: $project.programSummary, axis: .vertical)
                 TextField("Constraints", text: $project.constraintsText, axis: .vertical)
+                if !project.siteAddress.isEmpty {
+                    LabeledContent("Address") {
+                        Text(project.siteAddress).font(.caption)
+                    }
+                }
                 LabeledContent("Coordinates") {
                     Text(String(format: "%.5f, %.5f", project.siteLatitude, project.siteLongitude))
                         .font(.caption.monospaced())
+                }
+                if project.estimatedSiteValue > 0 {
+                    LabeledContent("Indicative valuation") {
+                        Text(
+                            project.estimatedSiteValue,
+                            format: .currency(code: project.valuationCurrency).precision(.fractionLength(0))
+                        )
+                        .font(.subheadline.weight(.semibold))
+                    }
+                    .accessibilityIdentifier("project.overview.valuation")
                 }
             }
             Section("Notes") {

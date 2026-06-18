@@ -36,6 +36,7 @@ public struct PrimaryButton: View {
                 .padding(.horizontal, layout == .compact ? 14 : 16)
                 .frame(maxWidth: layout == .fullWidth ? .infinity : nil)
         }
+        .contentShape(Rectangle())
         .buttonStyle(.plain)
         .background(
             RoundedRectangle(cornerRadius: WCSSpacing.cornerRadius, style: .continuous)

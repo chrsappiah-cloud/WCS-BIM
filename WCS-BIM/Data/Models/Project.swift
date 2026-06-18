@@ -7,6 +7,10 @@ final class Project {
     var name: String
     var siteLatitude: Double
     var siteLongitude: Double
+    var siteAddress: String
+    var estimatedSiteValue: Double
+    var valuationCurrency: String
+    var valuatedAt: Date?
     var createdAt: Date
     var notes: String
     var projectTypeRaw: String
@@ -36,6 +40,10 @@ final class Project {
         name: String,
         siteLatitude: Double = 0,
         siteLongitude: Double = 0,
+        siteAddress: String = "",
+        estimatedSiteValue: Double = 0,
+        valuationCurrency: String = "AUD",
+        valuatedAt: Date? = nil,
         notes: String = "",
         projectType: ProjectType = .commercial,
         designStage: DesignStage = .concept,
@@ -52,6 +60,10 @@ final class Project {
         self.name = name
         self.siteLatitude = siteLatitude
         self.siteLongitude = siteLongitude
+        self.siteAddress = siteAddress
+        self.estimatedSiteValue = estimatedSiteValue
+        self.valuationCurrency = valuationCurrency
+        self.valuatedAt = valuatedAt
         self.createdAt = Date()
         self.notes = notes
         self.projectTypeRaw = projectType.rawValue

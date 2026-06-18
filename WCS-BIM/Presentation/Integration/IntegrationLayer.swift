@@ -129,6 +129,11 @@ struct AppShellView: View {
         _subscriptionAccess = State(wrappedValue: access)
         _subscriptionManager = State(wrappedValue: SubscriptionManager(access: access))
         _fieldSystemsHub = State(wrappedValue: APIIntegrationHub())
+        if ProcessInfo.processInfo.environment["UITESTING"] == "1",
+           let requestedTab = ProcessInfo.processInfo.environment["UITEST_TAB_ID"],
+           let index = WCSRouteTab.bimWorkflow.firstIndex(where: { $0.id == requestedTab }) {
+            _selectedTab = State(wrappedValue: index)
+        }
     }
 
     var body: some View {

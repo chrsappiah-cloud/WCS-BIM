@@ -38,11 +38,11 @@ struct AIAssistantView: View {
 
             TextField(
                 "Ask for massing, zoning, circulation, sustainability...",
-                text: $prompt,
-                axis: .vertical
+                text: $prompt
             )
             .font(WCSFont.body())
             .textFieldStyle(.roundedBorder)
+            .submitLabel(.return)
             .accessibilityIdentifier("ai.promptField")
             .accessibilityLabel("AI prompt")
 

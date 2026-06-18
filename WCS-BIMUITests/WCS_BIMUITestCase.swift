@@ -16,6 +16,7 @@ class WCS_BIMUITestCase: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments.append("-UITesting")
         app.launchEnvironment["UITESTING"] = "1"
+        app.launchEnvironment.removeValue(forKey: "UITEST_TAB_ID")
         app.launch()
 
         let loading = app.otherElements["bootstrap.loading"]
@@ -49,7 +50,7 @@ class WCS_BIMUITestCase: XCTestCase {
     @discardableResult
     func createProject(named name: String, in app: XCUIApplication) -> String {
         let unique = "\(name) \(UUID().uuidString.prefix(6))"
-        app.tabBars.buttons["Projects"].tap()
+        selectTab("Projects", in: app)
         let nameField = app.textFields["project.nameField"]
         XCTAssertTrue(nameField.waitForExistence(timeout: 10))
         nameField.tap()
@@ -117,7 +118,7 @@ class WCS_BIMUITestCase: XCTestCase {
         let button = app.tabBars.buttons[title]
         XCTAssertTrue(button.waitForExistence(timeout: 8), "Tab bar button missing: \(title)")
         if button.isHittable {
-            button.tap()
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             return
         }
 
@@ -128,7 +129,7 @@ class WCS_BIMUITestCase: XCTestCase {
             "Export": 0.7,
             "More": 0.9
         ]
-        let x = positions[title] ?? 0.5
+        guard let x = positions[title] else { return }
         app.tabBars.firstMatch.coordinate(
             withNormalizedOffset: CGVector(dx: x, dy: 0.5)
         ).tap()
@@ -158,10 +159,18 @@ class WCS_BIMUITestCase: XCTestCase {
         if tab.waitForExistence(timeout: 3) {
             tapTabBarButton(title, in: app)
             if title == "Export",
-               !app.descendants(matching: .any)["export.screen"].waitForExistence(timeout: 3) {
-                tapTabBarButton("Projects", in: app)
-                tapTabBarButton("Export", in: app)
+               !app.descendants(matching: .any)["export.screen"].waitForExistence(timeout: 3),
+               !app.navigationBars["Export Center"].waitForExistence(timeout: 2) {
+                // Long physical-device UI sessions can leave TabView selection
+                // unresponsive even though the tab button remains hittable.
+                // Relaunch restores the shell; recreate a selected project if
+                // the in-memory selection was cleared.
+                app.launchEnvironment["UITEST_TAB_ID"] = "export"
+                app.terminate()
+                app.launch()
+                XCTAssertTrue(waitForShell(app), "App shell did not recover before Export")
                 if !app.buttons["export.ifc"].waitForExistence(timeout: 3) {
+                    app.launchEnvironment.removeValue(forKey: "UITEST_TAB_ID")
                     tapTabBarButton("Projects", in: app)
                     let field = app.textFields["project.nameField"]
                     XCTAssertTrue(field.waitForExistence(timeout: 8))
@@ -171,6 +180,7 @@ class WCS_BIMUITestCase: XCTestCase {
                     app.buttons["project.addButton"].tap()
                     tapTabBarButton("Export", in: app)
                 }
+                app.launchEnvironment.removeValue(forKey: "UITEST_TAB_ID")
             }
             return
         }
@@ -317,6 +327,115 @@ class WCS_BIMUITestCase: XCTestCase {
             )
             popToTabBar(in: app)
         }
+    }
+
+    @MainActor
+    func openProjectSiteLocationPanel(in app: XCUIApplication, projectName: String) {
+        openProject(named: projectName, in: app)
+        let workspace = app.buttons["project.openWorkspace"]
+        XCTAssertTrue(workspace.waitForExistence(timeout: 8), "Open full workspace button missing")
+        workspace.tap()
+
+        XCTAssertTrue(
+            app.navigationBars[projectName].waitForExistence(timeout: 10)
+                || app.segmentedControls.firstMatch.waitForExistence(timeout: 10),
+            "Project workspace did not load"
+        )
+
+        let siteTab = app.segmentedControls.buttons["Site"]
+        if siteTab.waitForExistence(timeout: 5) {
+            if siteTab.isHittable {
+                siteTab.tap()
+            } else {
+                siteTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            }
+        }
+
+        scrollToSiteLocationPanel(in: app)
+        XCTAssertTrue(
+            locationModeButton("Live", in: app).waitForExistence(timeout: 8)
+                || app.otherElements["site.location.locatorHeader"].waitForExistence(timeout: 8),
+            "Site location panel did not load"
+        )
+    }
+
+    @MainActor
+    func scrollToSiteLocationPanel(in app: XCUIApplication) {
+        for _ in 0..<10 {
+            if locationModeButton("Live", in: app).exists
+                || app.otherElements["site.location.locatorHeader"].exists {
+                return
+            }
+            app.swipeUp()
+        }
+    }
+
+    @MainActor
+    func locationModeSegment(in app: XCUIApplication) -> XCUIElement {
+        for index in 0..<app.segmentedControls.count {
+            let control = app.segmentedControls.element(boundBy: index)
+            if control.buttons["Live"].exists || control.buttons["Search"].exists {
+                return control
+            }
+        }
+        return app.segmentedControls.firstMatch
+    }
+
+    @MainActor
+    func locationModeButton(_ mode: String, in app: XCUIApplication) -> XCUIElement {
+        locationModeSegment(in: app).buttons[mode]
+    }
+
+    @MainActor
+    func selectLocationMode(_ mode: String, in app: XCUIApplication) {
+        scrollToSiteLocationPanel(in: app)
+        let button = locationModeButton(mode, in: app)
+        XCTAssertTrue(button.waitForExistence(timeout: 8), "Location mode missing: \(mode)")
+        if button.isSelected {
+            return
+        }
+        button.tap()
+    }
+
+    @MainActor
+    func fillManualLocation(
+        address: String,
+        latitude: String,
+        longitude: String,
+        in app: XCUIApplication
+    ) {
+        selectLocationMode("Manual", in: app)
+
+        let addressField = app.textFields["site.location.manualAddress"]
+        XCTAssertTrue(addressField.waitForExistence(timeout: 8))
+        addressField.tap()
+        addressField.typeText(address)
+
+        let latField = app.textFields["site.location.manualLatitude"]
+        XCTAssertTrue(latField.waitForExistence(timeout: 5))
+        latField.tap()
+        latField.typeText(latitude)
+
+        let lonField = app.textFields["site.location.manualLongitude"]
+        XCTAssertTrue(lonField.waitForExistence(timeout: 5))
+        lonField.tap()
+        lonField.typeText(longitude)
+        dismissKeyboard(in: app)
+    }
+
+    @MainActor
+    @discardableResult
+    func runSiteValuation(in app: XCUIApplication) -> XCUIElement {
+        scrollToSiteLocationPanel(in: app)
+        for _ in 0..<6 where !app.buttons["site.location.runValuation"].exists {
+            app.swipeUp()
+        }
+        let runButton = app.buttons["site.location.runValuation"]
+        XCTAssertTrue(runButton.waitForExistence(timeout: 8), "Run valuation button missing")
+        runButton.tap()
+        let value = app.staticTexts["site.location.valuationValue"]
+        XCTAssertTrue(value.waitForExistence(timeout: 12), "Valuation value did not appear")
+        return value
     }
 
     @MainActor
