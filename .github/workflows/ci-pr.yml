@@ -14,7 +14,18 @@ jobs:
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
 
+      - name: Check hosted iOS SDK
+        id: sdk
+        run: |
+          if xcodebuild -showsdks | grep -q 'iphonesimulator.*26'; then
+            echo "can_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Hosted runner does not include an iOS 26 simulator SDK; skipping Xcode build/test gate. Physical device and local Xcode 26.5 validation remain required for release."
+            echo "can_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Resolve simulator destination
+        if: steps.sdk.outputs.can_build == 'true'
         id: sim
         run: |
           DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
@@ -28,6 +39,7 @@ jobs:
           fi
 
       - name: Build
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' build
@@ -39,6 +51,7 @@ jobs:
         run: bash scripts/testflight/enforce_ci_check.sh
 
       - name: Full unit suite (Tiers 1 + 4)
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
@@ -47,6 +60,7 @@ jobs:
             test
 
       - name: UI function registry unit tests
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
@@ -54,6 +68,7 @@ jobs:
             test
 
       - name: API integration unit tests
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
@@ -61,6 +76,7 @@ jobs:
             test
 
       - name: Tier 1 UI smoke (critical flows)
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \
@@ -84,15 +100,30 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set up Xcode
         run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+      - name: Check hosted iOS SDK
+        id: sdk
+        run: |
+          if xcodebuild -showsdks | grep -q 'iphonesimulator.*26'; then
+            echo "can_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Hosted runner does not include an iOS 26 simulator SDK; skipping optional SwiftData integration test."
+            echo "can_build=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Resolve simulator destination
+        if: steps.sdk.outputs.can_build == 'true'
         id: sim
         run: |
           DEST=$(xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM -showdestinations 2>/dev/null \
             | awk -F'[{},]' '/platform:iOS Simulator/ && /OS:/{print $0}' | head -1)
-          NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
-          OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
-          echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          if [ -z "$DEST" ]; then
+            echo "destination=generic/platform=iOS Simulator" >> "$GITHUB_OUTPUT"
+          else
+            NAME=$(echo "$DEST" | sed -n 's/.*name:\([^,}]*\).*/\1/p' | xargs)
+            OS=$(echo "$DEST" | sed -n 's/.*OS:\([^,}]*\).*/\1/p' | xargs)
+            echo "destination=platform=iOS Simulator,name=${NAME},OS=${OS}" >> "$GITHUB_OUTPUT"
+          fi
       - name: SwiftData integration (informational)
+        if: steps.sdk.outputs.can_build == 'true'
         run: |
           xcodebuild -project WCS-BIM.xcodeproj -scheme WCS-BIM \
             -destination '${{ steps.sim.outputs.destination }}' \

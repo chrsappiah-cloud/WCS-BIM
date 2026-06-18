@@ -18,7 +18,8 @@ public struct WCSTabShell<TabContent: View>: View {
 
     public var body: some View {
         TabView(selection: $selection) {
-            ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
+            ForEach(tabs.indices, id: \.self) { index in
+                let tab = tabs[index]
                 tabContent(tab, index)
                     .tabItem {
                         Label(tab.title, systemImage: tab.systemImage)
@@ -27,7 +28,6 @@ public struct WCSTabShell<TabContent: View>: View {
                     .accessibilityIdentifier(tab.accessibilityIdentifier ?? "tab.\(tab.id)")
             }
         }
-        .tabBarMinimizeBehavior(.never)
     }
 }
 
